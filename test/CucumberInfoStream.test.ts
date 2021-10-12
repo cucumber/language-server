@@ -1,17 +1,19 @@
+import { CucumberInfo } from '@cucumber/language-service'
+import { NdjsonToMessageStream } from '@cucumber/message-streams'
+import { StepDocument } from '@cucumber/suggest'
+import assert from 'assert'
+import fs from 'fs'
 import { pipeline as pipelineCb, Writable } from 'stream'
 import { promisify } from 'util'
-import fs from 'fs'
-import { NdjsonToMessageStream } from '@cucumber/message-streams'
-import assert from 'assert'
-import { StepDocument } from '@cucumber/suggest'
-import { CucumberInfoStream } from '../src/CucumberInfoStream'
-import { CucumberInfo } from '@cucumber/language-service'
+
+import { CucumberInfoStream } from '../src/CucumberInfoStream.js'
+import { fixtureDir } from './fixtureDir.js'
 
 const pipeline = promisify(pipelineCb)
 
 describe('CucumberInfoStream', () => {
   it('builds CucumberInfo from a message stream with parameter types', async () => {
-    const readStream = fs.createReadStream(__dirname + '/fixtures/suggest.ndjson', 'utf-8')
+    const readStream = fs.createReadStream(`${fixtureDir}/suggest.ndjson`, 'utf-8')
     let cucumberInfo: CucumberInfo
     await pipeline(
       readStream,
@@ -61,7 +63,10 @@ describe('CucumberInfoStream', () => {
         suggestion: 'the suggestions should be:',
       },
     ]
-    assert.deepStrictEqual(cucumberInfo.stepDocuments.map(d => ({segments: d.segments, suggestion: d.suggestion})), expectedStepDocuments)
+    assert.deepStrictEqual(
+      cucumberInfo!.stepDocuments.map((d) => ({ segments: d.segments, suggestion: d.suggestion })),
+      expectedStepDocuments
+    )
 
     const expectedExpressionSources = [
       'the following Gherkin step texts exist:',
@@ -73,7 +78,7 @@ describe('CucumberInfoStream', () => {
       'the LSP snippet should be {string}',
     ]
     assert.deepStrictEqual(
-      cucumberInfo.expressions.map((e) => e.source),
+      cucumberInfo!.expressions.map((e) => e.source),
       expectedExpressionSources
     )
   })

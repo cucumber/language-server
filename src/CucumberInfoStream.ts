@@ -1,6 +1,6 @@
-import { Transform, TransformCallback } from 'stream'
-import { Envelope } from '@cucumber/messages'
 import { CucumberInfoBuilder } from '@cucumber/language-service'
+import { Envelope } from '@cucumber/messages'
+import { Transform, TransformCallback } from 'stream'
 
 export class CucumberInfoStream extends Transform {
   private readonly builder = new CucumberInfoBuilder()

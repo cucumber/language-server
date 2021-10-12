@@ -1,3 +1,13 @@
+import { Expression } from '@cucumber/cucumber-expressions'
+import {
+  getGherkinCompletionItems,
+  getGherkinDiagnostics,
+  getGherkinFormattingEdits,
+  getGherkinSemanticTokens,
+  semanticTokenTypes,
+} from '@cucumber/language-service'
+import { Index, jsSearchIndex } from '@cucumber/suggest'
+import { SemanticTokens } from 'vscode-languageserver'
 import {
   CompletionItem,
   createConnection,
@@ -11,18 +21,8 @@ import {
   TextDocumentSyncKind,
   TextEdit,
 } from 'vscode-languageserver/node'
-
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import { Index, jsSearchIndex } from '@cucumber/suggest'
-import {
-  getGherkinCompletionItems,
-  getGherkinDiagnostics,
-  getGherkinSemanticTokens,
-  getGherkinFormattingEdits,
-  semanticTokenModifiers,
-  semanticTokenTypes,
-} from '@cucumber/language-service'
-import { Expression } from '@cucumber/cucumber-expressions'
+
 import { makeCucumberInfo } from './makeCucumberInfo'
 
 // Create a connection for the server, using Node's IPC as a transport.
@@ -37,11 +37,11 @@ type IndexAndExpressions = {
   index: Index
 }
 
-let indexAndExpressions: IndexAndExpressions
+let indexAndExpressions: IndexAndExpressions | null = null
 
 let hasConfigurationCapability = false
 let hasWorkspaceFolderCapability = false
-let hasDiagnosticRelatedInformationCapability = false
+// const hasDiagnosticRelatedInformationCapability = false
 
 connection.onInitialize(async (params: InitializeParams) => {
   const capabilities = params.capabilities
@@ -52,11 +52,11 @@ connection.onInitialize(async (params: InitializeParams) => {
   hasWorkspaceFolderCapability = !!(
     capabilities.workspace && !!capabilities.workspace.workspaceFolders
   )
-  hasDiagnosticRelatedInformationCapability = !!(
-    capabilities.textDocument &&
-    capabilities.textDocument.publishDiagnostics &&
-    capabilities.textDocument.publishDiagnostics.relatedInformation
-  )
+  // hasDiagnosticRelatedInformationCapability = !!(
+  //   capabilities.textDocument &&
+  //   capabilities.textDocument.publishDiagnostics &&
+  //   capabilities.textDocument.publishDiagnostics.relatedInformation
+  // )
 
   const semanticTokensSupport =
     params.capabilities.textDocument && params.capabilities.textDocument.semanticTokens
@@ -75,7 +75,7 @@ connection.onInitialize(async (params: InitializeParams) => {
             },
             legend: {
               tokenTypes: semanticTokenTypes,
-              tokenModifiers: semanticTokenModifiers,
+              tokenModifiers: [],
             },
           }
         : undefined,
@@ -96,9 +96,14 @@ connection.onInitialize(async (params: InitializeParams) => {
 connection.onInitialized(() => {
   if (hasConfigurationCapability) {
     // Register for all configuration changes.
-    connection.client.register(DidChangeConfigurationNotification.type, undefined)
+    connection.client
+      .register(DidChangeConfigurationNotification.type, undefined)
+      .catch((err) =>
+        connection.console.error('Failed to register change notification: ' + err.message)
+      )
   }
   if (hasWorkspaceFolderCapability) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     connection.workspace.onDidChangeWorkspaceFolders((_event) => {
       connection.console.log('Workspace folder change event received.')
     })
@@ -133,13 +138,14 @@ function updateIndexAndExpressions() {
     .catch((err) => connection.console.error('Failed to make Cucumber Info: ' + err.message))
 }
 
-async function makeIndexAndExpressions(): Promise<IndexAndExpressions> {
+async function makeIndexAndExpressions(): Promise<IndexAndExpressions | null> {
   const cucumberInfo = await makeCucumberInfo(process.execPath, [
     './node_modules/.bin/cucumber-js',
     '--dry-run',
     '--format',
     'message',
   ])
+  if (!cucumberInfo) return null
   return {
     index: jsSearchIndex(cucumberInfo.stepDocuments),
     expressions: cucumberInfo.expressions,
@@ -147,12 +153,19 @@ async function makeIndexAndExpressions(): Promise<IndexAndExpressions> {
 }
 
 function validateGherkinDocument(textDocument: TextDocument): void {
-  const diagnostics = getGherkinDiagnostics(textDocument.getText(), indexAndExpressions.expressions)
-  connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
+  if (indexAndExpressions) {
+    const diagnostics = getGherkinDiagnostics(
+      textDocument.getText(),
+      indexAndExpressions.expressions
+    )
+    connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
+  }
 }
 
 connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-  const gherkinSource = documents.get(textDocumentPosition.textDocument.uri).getText()
+  const doc = documents.get(textDocumentPosition.textDocument.uri)
+  if (!doc || !indexAndExpressions) return []
+  const gherkinSource = doc.getText()
   return getGherkinCompletionItems(
     gherkinSource,
     textDocumentPosition.position.line,
@@ -162,13 +175,19 @@ connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): Comp
 
 connection.onCompletionResolve((item) => item)
 
-connection.languages.semanticTokens.on((semanticTokenParams: SemanticTokensParams) => {
-  const gherkinSource = documents.get(semanticTokenParams.textDocument.uri).getText()
-  return getGherkinSemanticTokens(gherkinSource, indexAndExpressions.expressions)
-})
+connection.languages.semanticTokens.on(
+  (semanticTokenParams: SemanticTokensParams): SemanticTokens => {
+    const doc = documents.get(semanticTokenParams.textDocument.uri)
+    if (!doc || !indexAndExpressions) return { data: [] }
+    const gherkinSource = doc.getText()
+    return getGherkinSemanticTokens(gherkinSource, indexAndExpressions.expressions)
+  }
+)
 
 connection.onDocumentFormatting(async (params): Promise<TextEdit[]> => {
-  const gherkinSource = documents.get(params.textDocument.uri).getText()
+  const doc = documents.get(params.textDocument.uri)
+  if (!doc) return []
+  const gherkinSource = doc.getText()
   return getGherkinFormattingEdits(gherkinSource)
 })
 

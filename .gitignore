@@ -4,7 +4,6 @@ dist/
 coverage/
 node_modules/
 yarn.lock
-package-lock.json
 *.log
 .deps
 .tested*
@@ -17,3 +16,6 @@ storybook-static
 *-go
 *.iml
 .vscode-test
+# stryker temp files
+.stryker-tmp
+reports

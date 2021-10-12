@@ -1,6 +1,5 @@
 {
-  "require": ["tsconfig-paths/register", "ts-node/register", "source-map-support/register"],
-  "extension": ["ts", "tsx"],
-  "recursive": true,
-  "timeout": 10000
+  "loader": "ts-node/esm",
+  "extension": ["ts"],
+  "recursive": true
 }

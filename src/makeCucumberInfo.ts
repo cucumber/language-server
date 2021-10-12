@@ -1,8 +1,9 @@
+import { CucumberInfo } from '@cucumber/language-service'
+import { NdjsonToMessageStream } from '@cucumber/message-streams'
 import { spawn } from 'child_process'
 import { pipeline, Writable } from 'stream'
-import { NdjsonToMessageStream } from '@cucumber/message-streams'
-import { CucumberInfo } from '@cucumber/language-service'
-import { CucumberInfoStream } from './CucumberInfoStream'
+
+import { CucumberInfoStream } from './CucumberInfoStream.js'
 
 export function makeCucumberInfo(command: string, args: string[]): Promise<CucumberInfo | null> {
   const cucumber = spawn(command, args)
@@ -35,7 +36,7 @@ export function makeCucumberInfo(command: string, args: string[]): Promise<Cucum
       (err) => err && reject(err)
     )
 
-    let cucumberInfo: CucumberInfo = null
+    let cucumberInfo: CucumberInfo | null = null
     pipeline(
       cucumber.stdout,
       new NdjsonToMessageStream(),
