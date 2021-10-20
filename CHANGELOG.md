@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.2.0...main
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/cucumber/language-server/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/cucumber/language-server/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/cucumber/common/tree/v0.0.1
