@@ -15,18 +15,21 @@
     ".": {
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
-    }
+    },
+    "./*": "./*",
+    "./": "./"
   },
   "bin": {
-    "cucumber-language-server": "bin/cucumber-language-server.js"
+    "cucumber-language-server": "bin/cucumber-language-server.cjs"
   },
   "scripts": {
     "build:cjs": "tsc --build tsconfig.build-cjs.json && cp package.cjs.json dist/cjs/package.json",
+    "build:cjs:watch": "tsc --build tsconfig.build-cjs.json --watch",
     "build:esm": "tsc --build tsconfig.build-esm.json",
     "build": "npm run build:cjs && npm run build:esm",
     "test": "mocha && npm run test:cjs",
     "test:cjs": "npm run build:cjs && mocha --no-config dist/cjs/test",
-    "stryker": "LANGUAGE_SERVER_FIXTURE_DIR=$(pwd)/test/fixtures stryker run",
+    "stryker": "stryker run",
     "prepublishOnly": "npm run build",
     "eslint-fix": "eslint --ext ts,tsx --max-warnings 0 --fix src test",
     "eslint": "eslint --ext ts,tsx --max-warnings 0 src test",
@@ -71,10 +74,9 @@
   "dependencies": {
     "@cucumber/cucumber-expressions": "^14.0.0",
     "@cucumber/gherkin-utils": "^7.0.0",
-    "@cucumber/language-service": "^0.3.0",
+    "@cucumber/language-service": "^0.4.0",
     "@cucumber/messages": "^17.1.1",
     "@cucumber/message-streams": "^3.0.0",
-    "@cucumber/suggest": "^0.0.6",
     "source-map-support": "0.5.20",
     "vscode-languageserver": "7.0.0",
     "vscode-languageserver-textdocument": "1.0.2"

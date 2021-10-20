@@ -1,13 +1,15 @@
-import { Expression } from '@cucumber/cucumber-expressions'
 import {
-  getGherkinCompletionItems,
   getGherkinDiagnostics,
   getGherkinFormattingEdits,
   getGherkinSemanticTokens,
   semanticTokenTypes,
 } from '@cucumber/language-service'
-import { Index, jsSearchIndex } from '@cucumber/suggest'
-import { SemanticTokens } from 'vscode-languageserver'
+import {
+  DidChangeWatchedFilesNotification,
+  DidChangeWatchedFilesRegistrationOptions,
+  SemanticTokens,
+  SemanticTokensOptions,
+} from 'vscode-languageserver'
 import {
   CompletionItem,
   createConnection,
@@ -23,73 +25,49 @@ import {
 } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
-import { makeCucumberInfo } from './makeCucumberInfo'
-
-// Create a connection for the server, using Node's IPC as a transport.
-// Also include all preview / proposed LSP features.
 const connection = createConnection(ProposedFeatures.all)
-
-// Create a simple text document manager.
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument)
-
-type IndexAndExpressions = {
-  expressions: readonly Expression[]
-  index: Index
-}
-
-let indexAndExpressions: IndexAndExpressions | null = null
 
 let hasConfigurationCapability = false
 let hasWorkspaceFolderCapability = false
-// const hasDiagnosticRelatedInformationCapability = false
+let hasDidChangeWatchedFilesCapability = false
+let hasSemanticTokensSupport = false
 
 connection.onInitialize(async (params: InitializeParams) => {
-  const capabilities = params.capabilities
+  hasConfigurationCapability = params.capabilities.workspace?.configuration || false
+  hasWorkspaceFolderCapability = params.capabilities.workspace?.workspaceFolders || false
+  hasDidChangeWatchedFilesCapability =
+    params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration || false
+  hasSemanticTokensSupport =
+    params.capabilities.textDocument?.semanticTokens?.dynamicRegistration || false
 
-  // Does the client support the `workspace/configuration` request?
-  // If not, we fall back using global settings.
-  hasConfigurationCapability = !!(capabilities.workspace && !!capabilities.workspace.configuration)
-  hasWorkspaceFolderCapability = !!(
-    capabilities.workspace && !!capabilities.workspace.workspaceFolders
-  )
-  // hasDiagnosticRelatedInformationCapability = !!(
-  //   capabilities.textDocument &&
-  //   capabilities.textDocument.publishDiagnostics &&
-  //   capabilities.textDocument.publishDiagnostics.relatedInformation
-  // )
-
-  const semanticTokensSupport =
-    params.capabilities.textDocument && params.capabilities.textDocument.semanticTokens
+  const semanticTokensProvider: SemanticTokensOptions | undefined = hasSemanticTokensSupport
+    ? {
+        full: {
+          delta: false,
+        },
+        legend: {
+          tokenTypes: semanticTokenTypes,
+          tokenModifiers: [],
+        },
+      }
+    : undefined
 
   const result: InitializeResult = {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
-      // Tell the client that this server supports code completion.
       completionProvider: {
         resolveProvider: false,
       },
-      semanticTokensProvider: semanticTokensSupport
-        ? {
-            full: {
-              delta: false,
-            },
-            legend: {
-              tokenTypes: semanticTokenTypes,
-              tokenModifiers: [],
-            },
-          }
-        : undefined,
+      workspace: {
+        workspaceFolders: {
+          supported: hasWorkspaceFolderCapability,
+        },
+      },
+      semanticTokensProvider,
       documentFormattingProvider: true,
     },
   }
-  if (hasWorkspaceFolderCapability) {
-    result.capabilities.workspace = {
-      workspaceFolders: {
-        supported: true,
-      },
-    }
-  }
-  indexAndExpressions = await makeIndexAndExpressions()
   return result
 })
 
@@ -108,69 +86,58 @@ connection.onInitialized(() => {
       connection.console.log('Workspace folder change event received.')
     })
   }
+  if (hasDidChangeWatchedFilesCapability) {
+    const option: DidChangeWatchedFilesRegistrationOptions = {
+      watchers: [{ globPattern: '**/*.ts' }],
+    }
+    connection.client
+      .register(DidChangeWatchedFilesNotification.type, option)
+      .catch((err) =>
+        connection.console.error(
+          'Failed to register DidChangeWatchedFilesNotification: ' + err.message
+        )
+      )
+  }
   connection.console.log('Cucumber Language server initialized')
-  updateIndexAndExpressions()
+  // updateIndexAndExpressions()
 })
 
 connection.onDidChangeConfiguration(() => {
   documents.all().forEach(validateGherkinDocument)
 })
 
+connection.onDidChangeWatchedFiles(async ({ changes }) => {
+  connection.console.log(`*** onDidChangeWatchedFiles: ${JSON.stringify(changes, null, 2)}`)
+})
+
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent((change) => {
-  updateIndexAndExpressionsDebounce()
-  validateGherkinDocument(change.document)
+  connection.console.log(`*** onDidChangeContent: ${change.document.uri}`)
+  // updateIndexAndExpressionsDebounce()
+  if (change.document.uri.match(/\.feature$/)) {
+    validateGherkinDocument(change.document)
+  }
+  if (change.document.uri.match(/\.ts$/)) {
+  }
 })
 
-let updateTimer: NodeJS.Timer
-
-function updateIndexAndExpressionsDebounce() {
-  if (updateTimer) clearTimeout(updateTimer)
-  updateTimer = setTimeout(updateIndexAndExpressions, 5000)
-}
-
-function updateIndexAndExpressions() {
-  makeIndexAndExpressions()
-    .then((_indexAndExpressions) => {
-      indexAndExpressions = _indexAndExpressions
-    })
-    .catch((err) => connection.console.error('Failed to make Cucumber Info: ' + err.message))
-}
-
-async function makeIndexAndExpressions(): Promise<IndexAndExpressions | null> {
-  const cucumberInfo = await makeCucumberInfo(process.execPath, [
-    './node_modules/.bin/cucumber-js',
-    '--dry-run',
-    '--format',
-    'message',
-  ])
-  if (!cucumberInfo) return null
-  return {
-    index: jsSearchIndex(cucumberInfo.stepDocuments),
-    expressions: cucumberInfo.expressions,
-  }
-}
-
 function validateGherkinDocument(textDocument: TextDocument): void {
-  if (indexAndExpressions) {
-    const diagnostics = getGherkinDiagnostics(
-      textDocument.getText(),
-      indexAndExpressions.expressions
-    )
-    connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
-  }
+  // const diagnostics = getGherkinDiagnostics(textDocument.getText(), indexAndExpressions.expressions)
+  const diagnostics = getGherkinDiagnostics(textDocument.getText(), [])
+  connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
 }
 
 connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-  const doc = documents.get(textDocumentPosition.textDocument.uri)
-  if (!doc || !indexAndExpressions) return []
-  const gherkinSource = doc.getText()
-  return getGherkinCompletionItems(
-    gherkinSource,
-    textDocumentPosition.position.line,
-    indexAndExpressions.index
-  )
+  return []
+  // const doc = documents.get(textDocumentPosition.textDocument.uri)
+  // if (!doc || !indexAndExpressions) return []
+  // const gherkinSource = doc.getText()
+  // return getGherkinCompletionItems(
+  //   gherkinSource,
+  //   textDocumentPosition.position.line,
+  //   indexAndExpressions.index
+  // )
 })
 
 connection.onCompletionResolve((item) => item)
@@ -178,9 +145,10 @@ connection.onCompletionResolve((item) => item)
 connection.languages.semanticTokens.on(
   (semanticTokenParams: SemanticTokensParams): SemanticTokens => {
     const doc = documents.get(semanticTokenParams.textDocument.uri)
-    if (!doc || !indexAndExpressions) return { data: [] }
+    if (!doc) return { data: [] }
     const gherkinSource = doc.getText()
-    return getGherkinSemanticTokens(gherkinSource, indexAndExpressions.expressions)
+    // return getGherkinSemanticTokens(gherkinSource, indexAndExpressions.expressions)
+    return getGherkinSemanticTokens(gherkinSource, [])
   }
 )
 
