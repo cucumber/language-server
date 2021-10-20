@@ -33,7 +33,9 @@
     "prepublishOnly": "npm run build",
     "eslint-fix": "eslint --ext ts,tsx --max-warnings 0 --fix src test",
     "eslint": "eslint --ext ts,tsx --max-warnings 0 src test",
-    "upgrade": "npm-check-updates --upgrade"
+    "upgrade": "npm-check-updates --upgrade",
+    "prepare": "husky install",
+    "pretty-quick-staged": "pretty-quick --staged"
   },
   "repository": {
     "type": "git",
@@ -64,6 +66,7 @@
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-prettier": "4.0.0",
     "eslint-plugin-simple-import-sort": "7.0.0",
+    "husky": "7.0.2",
     "mocha": "9.1.2",
     "npm-check-updates": "11.8.5",
     "prettier": "2.4.1",
