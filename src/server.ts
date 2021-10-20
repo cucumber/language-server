@@ -118,7 +118,8 @@ documents.onDidChangeContent((change) => {
   if (change.document.uri.match(/\.feature$/)) {
     validateGherkinDocument(change.document)
   }
-  if (change.document.uri.match(/\.ts$/)) {
+  if (change.document.uri.match(/\.(ts|java)$/)) {
+    console.log('TODO: Update index using')
   }
 })
 
@@ -129,6 +130,7 @@ function validateGherkinDocument(textDocument: TextDocument): void {
 }
 
 connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
+  if (!textDocumentPosition) throw new Error('DELETEME')
   return []
   // const doc = documents.get(textDocumentPosition.textDocument.uri)
   // if (!doc || !indexAndExpressions) return []
