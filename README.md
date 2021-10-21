@@ -1,3 +1,5 @@
+[![test-javascript](https://github.com/cucumber/language-server/actions/workflows/test-javascript.yml/badge.svg)](https://github.com/cucumber/language-server/actions/workflows/test-javascript.yml)
+
 # Cucumber Language Server
 
 A [Language Server](https://langserver.org/) for Cucumber.
