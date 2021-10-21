@@ -3,6 +3,12 @@ import {
   getGherkinFormattingEdits,
   getGherkinSemanticTokens,
   semanticTokenTypes,
+  ExpressionBuilder,
+  getGherkinCompletionItems,
+  Index,
+  parseGherkinDocument,
+  buildStepDocuments,
+  jsSearchIndex,
 } from '@cucumber/language-service'
 import {
   DidChangeWatchedFilesNotification,
@@ -24,6 +30,12 @@ import {
   TextEdit,
 } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
+import { Expression } from '@cucumber/cucumber-expressions'
+import { extractStepTexts } from '@cucumber/language-service'
+
+const expressionBuilder = new ExpressionBuilder()
+let expressions: readonly Expression[] = []
+let index: Index
 
 const connection = createConnection(ProposedFeatures.all)
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument)
@@ -34,6 +46,13 @@ let hasDidChangeWatchedFilesCapability = false
 let hasSemanticTokensSupport = false
 
 connection.onInitialize(async (params: InitializeParams) => {
+  connection.console.log('onInitialize. Directory: ' + process.cwd())
+  await expressionBuilder.init({
+    java: '/Users/Aslak.Hellesoy/git/cucumber/language-server/node_modules/@cucumber/language-service/tree-sitter-java.wasm',
+    typescript:
+      '/Users/Aslak.Hellesoy/git/cucumber/language-server/node_modules/@cucumber/language-service/tree-sitter-typescript.wasm',
+  })
+
   hasConfigurationCapability = params.capabilities.workspace?.configuration || false
   hasWorkspaceFolderCapability = params.capabilities.workspace?.workspaceFolders || false
   hasDidChangeWatchedFilesCapability =
@@ -99,7 +118,6 @@ connection.onInitialized(() => {
       )
   }
   connection.console.log('Cucumber Language server initialized')
-  // updateIndexAndExpressions()
 })
 
 connection.onDidChangeConfiguration(() => {
@@ -114,32 +132,34 @@ connection.onDidChangeWatchedFiles(async ({ changes }) => {
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent((change) => {
   connection.console.log(`*** onDidChangeContent: ${change.document.uri}`)
-  // updateIndexAndExpressionsDebounce()
   if (change.document.uri.match(/\.feature$/)) {
     validateGherkinDocument(change.document)
+    // TODO: only parse once - validateGherkinDocument also parses...
+    const { gherkinDocument, error } = parseGherkinDocument(change.document.getText())
+    if (gherkinDocument) {
+      const stepTexts = extractStepTexts(gherkinDocument, [])
+      const stepDocuments = buildStepDocuments(stepTexts, expressions)
+      index = jsSearchIndex(stepDocuments)
+    }
   }
-  if (change.document.uri.match(/\.(ts|java)$/)) {
-    console.log('TODO: Update index using')
+  if (change.document.uri.match(/\.ts$/)) {
+    const doc = documents.get(change.document.uri)
+    if (!doc) return
+    const sources = [doc.getText()]
+    expressions = expressionBuilder.build('typescript', sources)
   }
 })
 
 function validateGherkinDocument(textDocument: TextDocument): void {
-  // const diagnostics = getGherkinDiagnostics(textDocument.getText(), indexAndExpressions.expressions)
-  const diagnostics = getGherkinDiagnostics(textDocument.getText(), [])
+  const diagnostics = getGherkinDiagnostics(textDocument.getText(), expressions)
   connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
 }
 
 connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-  if (!textDocumentPosition) throw new Error('DELETEME')
-  return []
-  // const doc = documents.get(textDocumentPosition.textDocument.uri)
-  // if (!doc || !indexAndExpressions) return []
-  // const gherkinSource = doc.getText()
-  // return getGherkinCompletionItems(
-  //   gherkinSource,
-  //   textDocumentPosition.position.line,
-  //   indexAndExpressions.index
-  // )
+  const doc = documents.get(textDocumentPosition.textDocument.uri)
+  if (!doc || !index) return []
+  const gherkinSource = doc.getText()
+  return getGherkinCompletionItems(gherkinSource, textDocumentPosition.position.line, index)
 })
 
 connection.onCompletionResolve((item) => item)
@@ -149,8 +169,7 @@ connection.languages.semanticTokens.on(
     const doc = documents.get(semanticTokenParams.textDocument.uri)
     if (!doc) return { data: [] }
     const gherkinSource = doc.getText()
-    // return getGherkinSemanticTokens(gherkinSource, indexAndExpressions.expressions)
-    return getGherkinSemanticTokens(gherkinSource, [])
+    return getGherkinSemanticTokens(gherkinSource, expressions)
   }
 )
 

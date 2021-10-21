@@ -73,7 +73,7 @@
   "dependencies": {
     "@cucumber/cucumber-expressions": "^14.0.0",
     "@cucumber/gherkin-utils": "^7.0.0",
-    "@cucumber/language-service": "^0.6.0",
+    "@cucumber/language-service": "^0.8.0",
     "@cucumber/messages": "^17.1.1",
     "@cucumber/message-streams": "^3.0.0",
     "source-map-support": "0.5.20",
