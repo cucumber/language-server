@@ -1,3 +1,12 @@
+import { Expression } from '@cucumber/cucumber-expressions'
+import {
+  getGherkinCompletionItems,
+  getGherkinDiagnostics,
+  getGherkinFormattingEdits,
+  getGherkinSemanticTokens,
+  Index,
+  semanticTokenTypes,
+} from '@cucumber/language-service'
 import {
   Connection,
   DidChangeConfigurationNotification,
@@ -9,16 +18,8 @@ import {
   TextDocumentSyncKind,
 } from 'vscode-languageserver'
 import { TextDocument } from 'vscode-languageserver-textdocument'
+
 import { ExpressionBuilder } from './tree-sitter/ExpressionBuilder.js'
-import {
-  Index,
-  getGherkinCompletionItems,
-  getGherkinDiagnostics,
-  getGherkinFormattingEdits,
-  getGherkinSemanticTokens,
-  semanticTokenTypes,
-} from '@cucumber/language-service'
-import { Expression } from '@cucumber/cucumber-expressions'
 
 export class CucumberLanguageServer {
   public static async create(
@@ -112,8 +113,9 @@ export class CucumberLanguageServer {
     }
     if (this.params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration) {
       this.connection.onDidChangeWatchedFiles(async ({ changes }) => {
-        // connection.console.log(`*** onDidChangeWatchedFiles: ${JSON.stringify(changes, null, 2)}`)
-        this.connection.console.log(`*** onDidChangeWatchedFiles:`)
+        this.connection.console.log(
+          `*** onDidChangeWatchedFiles: ${JSON.stringify(changes, null, 2)}`
+        )
       })
 
       const option: DidChangeWatchedFilesRegistrationOptions = {
