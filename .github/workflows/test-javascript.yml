@@ -14,7 +14,8 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-        node-version: ['12.x', '14.x', '16.x']
+        # 16.12.0 has broken ESM support
+        node-version: ['12.x', '14.x', '16.11.x', '17.x']
         include:
           - os: windows-latest
             node-version: '16.x'
@@ -22,14 +23,14 @@ jobs:
             node-version: '16.x'
 
     steps:
-    - name: set git core.autocrlf to 'input'
-      run: git config --global core.autocrlf input
-    - uses: actions/checkout@v2
-    - name: with Node.js ${{ matrix.node-version }} on ${{ matrix.os }}
-      uses: actions/setup-node@v2
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: package-lock.json
-    - run: npm install-test
-    - run: npm run eslint
+      - name: set git core.autocrlf to 'input'
+        run: git config --global core.autocrlf input
+      - uses: actions/checkout@v2
+      - name: with Node.js ${{ matrix.node-version }} on ${{ matrix.os }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - run: npm install-test
+      - run: npm run eslint
