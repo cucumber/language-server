@@ -16,6 +16,3 @@ storybook-static
 *-go
 *.iml
 .vscode-test
-# stryker temp files
-.stryker-tmp
-reports
