@@ -78,7 +78,7 @@
     "@cucumber/message-streams": "^3.0.0",
     "@cucumber/suggest": "^0.0.6",
     "source-map-support": "0.5.21",
-    "tree-sitter-cli": "0.20.0",
+    "tree-sitter-cli": "0.20.1",
     "tree-sitter-java": "0.19.1",
     "tree-sitter-typescript": "0.19.0",
     "vscode-languageserver": "7.0.0",
