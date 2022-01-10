@@ -28,28 +28,11 @@ type ServerInfo = {
 }
 
 export class CucumberLanguageServer {
-  public static async create(
-    connection: Connection,
-    params: InitializeParams
-  ): Promise<CucumberLanguageServer> {
-    const expressionBuilder = new ExpressionBuilder()
-    await expressionBuilder.init({
-      // Relative to dist/src/cjs
-      java: `${__dirname}/../../../tree-sitter-java.wasm`,
-      typescript: `${__dirname}/../../../tree-sitter-typescript.wasm`,
-    })
-    return new CucumberLanguageServer(connection, params, expressionBuilder)
-  }
-
   private expressions: readonly Expression[] = []
   private index: Index
   private readonly documents = new TextDocuments(TextDocument)
 
-  constructor(
-    private readonly connection: Connection,
-    private readonly params: InitializeParams,
-    private readonly expressionBuilder: ExpressionBuilder
-  ) {
+  constructor(private readonly connection: Connection) {
     this.documents.listen(this.connection)
 
     // The content of a text document has changed. This event is emitted
@@ -93,15 +76,15 @@ export class CucumberLanguageServer {
     })
   }
 
-  public initialize() {
-    if (this.params.capabilities.workspace?.configuration) {
+  public initialize(params: InitializeParams, expressionBuilder: ExpressionBuilder) {
+    if (params.capabilities.workspace?.configuration) {
       this.connection.client
         .register(DidChangeConfigurationNotification.type, undefined)
         .catch((err) =>
           this.connection.console.error('Failed to register change notification: ' + err.message)
         )
     }
-    if (this.params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration) {
+    if (params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration) {
       this.connection.onDidChangeWatchedFiles(async ({ changes }) => {
         this.connection.console.log(
           `*** onDidChangeWatchedFiles: ${JSON.stringify(changes, null, 2)}`
