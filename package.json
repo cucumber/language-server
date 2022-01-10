@@ -51,9 +51,9 @@
   },
   "homepage": "https://github.com/cucumber/language-server#readme",
   "devDependencies": {
-    "@cucumber/cucumber": "7.3.1",
+    "@cucumber/cucumber": "7.3.2",
     "@types/mocha": "9.0.0",
-    "@types/node": "16.11.19",
+    "@types/node": "17.0.8",
     "@typescript-eslint/eslint-plugin": "5.9.0",
     "@typescript-eslint/parser": "5.9.0",
     "eslint": "8.6.0",
@@ -71,9 +71,9 @@
     "typescript": "4.5.4"
   },
   "dependencies": {
-    "@cucumber/cucumber-expressions": "^14.0.0",
+    "@cucumber/cucumber-expressions": "^15.0.1",
     "@cucumber/gherkin-utils": "^7.0.0",
-    "@cucumber/language-service": "^0.10.0",
+    "@cucumber/language-service": "^0.11.0",
     "@cucumber/messages": "^17.1.1",
     "@cucumber/message-streams": "^3.0.0",
     "@cucumber/suggest": "^0.0.6",
