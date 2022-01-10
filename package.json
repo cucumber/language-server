@@ -19,7 +19,7 @@
     }
   },
   "bin": {
-    "cucumber-language-server": "bin/cucumber-language-server.js"
+    "cucumber-language-server": "bin/cucumber-language-server.cjs"
   },
   "scripts": {
     "build:cjs": "tsc --build tsconfig.build-cjs.json && cp package.cjs.json dist/cjs/package.json",

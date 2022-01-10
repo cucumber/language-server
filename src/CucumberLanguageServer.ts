@@ -13,6 +13,7 @@ import {
   DidChangeWatchedFilesNotification,
   DidChangeWatchedFilesRegistrationOptions,
   InitializeParams,
+  InitializeResult,
   ServerCapabilities,
   TextDocuments,
   TextDocumentSyncKind,
@@ -154,6 +155,12 @@ export class CucumberLanguageServer {
         },
       },
       documentFormattingProvider: true,
+    }
+  }
+
+  public initializeResult(): InitializeResult {
+    return {
+      capabilities: this.capabilities(),
     }
   }
 
