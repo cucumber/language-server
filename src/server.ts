@@ -1,4 +1,3 @@
-import { Connection } from 'vscode-languageserver'
 import { createConnection, ProposedFeatures } from 'vscode-languageserver/node'
 
 import { CucumberLanguageServer } from './CucumberLanguageServer.js'
