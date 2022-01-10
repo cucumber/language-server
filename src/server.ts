@@ -3,7 +3,7 @@ import { createConnection, ProposedFeatures } from 'vscode-languageserver/node'
 
 import { CucumberLanguageServer } from './CucumberLanguageServer.js'
 
-const connection: Connection = createConnection(ProposedFeatures.all)
+const connection = createConnection(ProposedFeatures.all)
 let server: CucumberLanguageServer
 
 connection.onInitialize(async (params) => {
