@@ -13,7 +13,6 @@ import {
   DidChangeWatchedFilesNotification,
   DidChangeWatchedFilesRegistrationOptions,
   InitializeParams,
-  InitializeResult,
   ServerCapabilities,
   TextDocuments,
   TextDocumentSyncKind,
@@ -21,6 +20,12 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { ExpressionBuilder } from './tree-sitter/ExpressionBuilder.js'
+import { version } from './version.js'
+
+type ServerInfo = {
+  name: string
+  version: string
+}
 
 export class CucumberLanguageServer {
   public static async create(
@@ -46,12 +51,9 @@ export class CucumberLanguageServer {
     private readonly expressionBuilder: ExpressionBuilder
   ) {
     this.documents.listen(this.connection)
-    // connection.onDidChangeConfiguration(() => {
-    //   this.documents.all().forEach(this.validateGherkinDocument.bind(this))
-    // })
 
     // The content of a text document has changed. This event is emitted
-    // when the text document first opened or when its content has changed.
+    // when the text document is first opened or when its content has changed.
     this.documents.onDidChangeContent((change) => {
       connection.console.log(`*** onDidChangeContent: ${change.document.uri}`)
       connection.console.log(
@@ -64,20 +66,7 @@ export class CucumberLanguageServer {
       )
       if (change.document.uri.match(/\.feature$/)) {
         this.validateGherkinDocument(change.document)
-        // // TODO: only parse once - validateGherkinDocument also parses...
-        // const { gherkinDocument, error } = parseGherkinDocument(change.document.getText())
-        // if (gherkinDocument) {
-        //   const stepTexts = extractStepTexts(gherkinDocument, [])
-        //   const stepDocuments = buildStepDocuments(stepTexts, expressions)
-        //   index = jsSearchIndex(stepDocuments)
-        // }
       }
-      // if (change.document.uri.match(/\.ts$/)) {
-      //   const doc = documents.get(change.document.uri)
-      //   if (!doc) return
-      //   const sources = [doc.getText()]
-      //   expressions = expressionBuilder.build('typescript', sources)
-      // }
     })
 
     connection.onCompletion((params) => {
@@ -158,9 +147,10 @@ export class CucumberLanguageServer {
     }
   }
 
-  public initializeResult(): InitializeResult {
+  public info(): ServerInfo {
     return {
-      capabilities: this.capabilities(),
+      name: 'Cucumber Language Server',
+      version,
     }
   }
 

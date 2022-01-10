@@ -16,6 +16,9 @@
     ".": {
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./bin/cucumber-language-server.cjs": {
+      "require": "./bin/cucumber-language-server.cjs"
     }
   },
   "bin": {
@@ -24,6 +27,7 @@
   "scripts": {
     "build:cjs": "tsc --build tsconfig.build-cjs.json && cp package.cjs.json dist/cjs/package.json",
     "build:esm": "tsc --build tsconfig.build-esm.json",
+    "build:version": "node --eval \"console.log('export const version = \\'' + require('./package.json').version + '\\'')\" > src/version.ts",
     "build": "npm run build:cjs && npm run build:esm",
     "test": "mocha && npm run test:cjs",
     "test:cjs": "npm run build:cjs && mocha --no-config --recursive dist/cjs/test",

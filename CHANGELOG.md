@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Export `./bin/cucumber-language-server.cjs`
+- Fix server initialization
+
 ## [0.3.2] - 2022-01-10
 ### Fixed
 - Fix startup script
