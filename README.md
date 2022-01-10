@@ -5,10 +5,10 @@
 A [Language Server](https://langserver.org/) for Cucumber.
 
 This language server provides most of the functionality offered by the
-[Cucumber Visual Studio Code Extension](../../vscode/javascript).
+[Cucumber Visual Studio Code Extension](https://github.com/cucumber/vscode).
 
-It may also be used to power other editors.
+It may also be used to power other LSP editors.
 
 ## Supported features
 
-See [Cucumber Language Service](../../language-service/javascript)
+See [Cucumber Language Service](https://github.com/cucumber/language-service)
