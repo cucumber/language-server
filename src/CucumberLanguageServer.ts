@@ -19,6 +19,7 @@ import {
   TextDocuments,
   TextDocumentSyncKind,
 } from 'vscode-languageserver'
+import { WorkDoneProgressBegin } from 'vscode-languageserver-protocol/lib/common/protocol'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { buildStepTexts } from './buildStepTexts'
@@ -158,6 +159,9 @@ export class CucumberLanguageServer {
   }
 
   private async updateSettings(settings: Settings) {
+    // TODO: Send WorkDoneProgressBegin notification
+    // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
+
     const glueSources = await loadAll(settings.glueGlobs)
     const expressions = this.expressionBuilder.build(settings.language, glueSources)
     const gherkinSources = await loadAll(settings.gherkinGlobs)
@@ -167,6 +171,7 @@ export class CucumberLanguageServer {
     )
     const stepDocuments = buildStepDocuments(stepTexts, expressions)
     this.index = jsSearchIndex(stepDocuments)
-    console.log('Indexed!')
+
+    // TODO: Send WorkDoneProgressEnd notification
   }
 }
