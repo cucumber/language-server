@@ -1,25 +1,29 @@
 import { Expression } from '@cucumber/cucumber-expressions'
 import {
+  buildStepDocuments,
   getGherkinCompletionItems,
   getGherkinDiagnostics,
   getGherkinFormattingEdits,
   getGherkinSemanticTokens,
   Index,
+  jsSearchIndex,
   semanticTokenTypes,
+  StepDocument,
 } from '@cucumber/language-service'
 import {
+  ConfigurationRequest,
   Connection,
   DidChangeConfigurationNotification,
-  DidChangeWatchedFilesNotification,
-  DidChangeWatchedFilesRegistrationOptions,
-  InitializeParams,
   ServerCapabilities,
   TextDocuments,
   TextDocumentSyncKind,
 } from 'vscode-languageserver'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
-import { ExpressionBuilder } from './tree-sitter/ExpressionBuilder.js'
+import { buildStepTexts } from './buildStepTexts'
+import { loadAll } from './loadAll'
+import { ExpressionBuilder, LanguageName } from './tree-sitter/ExpressionBuilder.js'
+import { Settings } from './types'
 import { version } from './version.js'
 
 type ServerInfo = {
@@ -28,98 +32,140 @@ type ServerInfo = {
 }
 
 export class CucumberLanguageServer {
-  public static async create(
-    connection: Connection,
-    params: InitializeParams
-  ): Promise<CucumberLanguageServer> {
-    const expressionBuilder = new ExpressionBuilder()
-    await expressionBuilder.init({
-      // Relative to dist/src/cjs
-      java: `${__dirname}/../../../tree-sitter-java.wasm`,
-      typescript: `${__dirname}/../../../tree-sitter-typescript.wasm`,
-    })
-    return new CucumberLanguageServer(connection, params, expressionBuilder)
-  }
-
   private expressions: readonly Expression[] = []
   private index: Index
-  private readonly documents = new TextDocuments(TextDocument)
+  private expressionBuilder = new ExpressionBuilder()
 
   constructor(
     private readonly connection: Connection,
-    private readonly params: InitializeParams,
-    private readonly expressionBuilder: ExpressionBuilder
+    private readonly documents: TextDocuments<TextDocument>
   ) {
-    this.documents.listen(this.connection)
+    connection.onInitialize(async (params) => {
+      // await connection.console.info(
+      //   'CucumberLanguageServer initializing: ' + JSON.stringify(params, null, 2)
+      // )
+
+      await this.expressionBuilder.init({
+        // Relative to dist/src/cjs
+        java: `${__dirname}/../../../tree-sitter-java.wasm`,
+        typescript: `${__dirname}/../../../tree-sitter-typescript.wasm`,
+      })
+
+      if (params.capabilities.workspace?.configuration) {
+        connection.onDidChangeConfiguration((params) => {
+          this.connection.console.log(
+            '*** onDidChangeConfiguration: ' + JSON.stringify(params, null, 2)
+          )
+          this.updateSettings(<Settings>params.settings).catch((err) => {
+            this.connection.console.error(`Failed to update settings: ${err.message}`)
+          })
+        })
+        try {
+          await connection.client.register(DidChangeConfigurationNotification.type)
+        } catch (err) {
+          await connection.console.warn(
+            'Could not register DidChangeConfigurationNotification: ' + err.message
+          )
+        }
+      } else {
+        console.log('*** Disabled onDidChangeConfiguration')
+      }
+
+      if (params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration) {
+        connection.onDidChangeWatchedFiles(async ({ changes }) => {
+          if (!changes) {
+            await connection.console.error('*** onDidChangeWatchedFiles - no changes??')
+          } else {
+            await connection.console.info(`*** onDidChangeWatchedFiles`)
+          }
+        })
+        // await connection.client.register(DidChangeWatchedFilesNotification.type, {
+        //   // TODO: Take from settings
+        //   watchers: [{ globPattern: 'features/**/*.{feature,java,ts}' }],
+        // })
+      } else {
+        console.log('*** Disabled onDidChangeWatchedFiles')
+      }
+
+      if (params.capabilities.textDocument?.semanticTokens) {
+        connection.languages.semanticTokens.on((semanticTokenParams) => {
+          const doc = documents.get(semanticTokenParams.textDocument.uri)
+          if (!doc) return { data: [] }
+          const gherkinSource = doc.getText()
+          return getGherkinSemanticTokens(gherkinSource, this.expressions)
+        })
+      } else {
+        console.log('*** Disabled semanticTokens')
+      }
+
+      if (params.capabilities.textDocument?.completion?.completionItem?.snippetSupport) {
+        connection.onCompletion((params) => {
+          if (!this.index) return []
+          const doc = documents.get(params.textDocument.uri)
+          if (!doc) return []
+          const gherkinSource = doc.getText()
+          return getGherkinCompletionItems(gherkinSource, params.position.line, this.index)
+        })
+
+        connection.onCompletionResolve((item) => item)
+      } else {
+        console.log('*** Disabled onCompletion')
+      }
+
+      if (params.capabilities.textDocument?.formatting) {
+        connection.onDocumentFormatting((params) => {
+          const doc = documents.get(params.textDocument.uri)
+          if (!doc) return []
+          const gherkinSource = doc.getText()
+          return getGherkinFormattingEdits(gherkinSource)
+        })
+      } else {
+        console.log('*** Disabled onDocumentFormatting')
+      }
+
+      await connection.console.info('Cucumber Language server initialized')
+
+      return {
+        capabilities: this.capabilities(),
+        serverInfo: this.info(),
+      }
+    })
+
+    connection.onInitialized(() => {
+      console.log('*** onInitialized')
+    })
+
+    documents.listen(connection)
 
     // The content of a text document has changed. This event is emitted
     // when the text document is first opened or when its content has changed.
-    this.documents.onDidChangeContent((change) => {
-      connection.console.log(`*** onDidChangeContent: ${change.document.uri}`)
-      connection.console.log(
-        'DOCS:' +
-          JSON.stringify(
-            this.documents.all().map((d) => d.uri),
-            null,
-            2
-          )
-      )
+    documents.onDidChangeContent(async (change) => {
       if (change.document.uri.match(/\.feature$/)) {
         this.validateGherkinDocument(change.document)
       }
-    })
-
-    connection.onCompletion((params) => {
-      const doc = this.documents.get(params.textDocument.uri)
-      if (!doc || !this.index) return []
-      const gherkinSource = doc.getText()
-      return getGherkinCompletionItems(gherkinSource, params.position.line, this.index)
-    })
-
-    connection.onCompletionResolve((item) => item)
-
-    connection.languages.semanticTokens.on((semanticTokenParams) => {
-      const doc = this.documents.get(semanticTokenParams.textDocument.uri)
-      if (!doc) return { data: [] }
-      const gherkinSource = doc.getText()
-      return getGherkinSemanticTokens(gherkinSource, this.expressions)
-    })
-
-    connection.onDocumentFormatting((params) => {
-      const doc = this.documents.get(params.textDocument.uri)
-      if (!doc) return []
-      const gherkinSource = doc.getText()
-      return getGherkinFormattingEdits(gherkinSource)
+      const settings = await this.getSettings()
+      if (settings) {
+        await this.updateSettings(settings)
+      } else {
+        await this.connection.console.warn('Could not get cucumber.* settings')
+      }
+      console.log('onDidChangeContent', { settings })
     })
   }
 
-  public initialize() {
-    if (this.params.capabilities.workspace?.configuration) {
-      this.connection.client
-        .register(DidChangeConfigurationNotification.type, undefined)
-        .catch((err) =>
-          this.connection.console.error('Failed to register change notification: ' + err.message)
-        )
-    }
-    if (this.params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration) {
-      this.connection.onDidChangeWatchedFiles(async ({ changes }) => {
-        this.connection.console.log(
-          `*** onDidChangeWatchedFiles: ${JSON.stringify(changes, null, 2)}`
-        )
+  private async getSettings(): Promise<Settings | undefined> {
+    try {
+      const config = await this.connection.sendRequest(ConfigurationRequest.type, {
+        items: [
+          {
+            section: 'cucumber',
+          },
+        ],
       })
-
-      const option: DidChangeWatchedFilesRegistrationOptions = {
-        watchers: [{ globPattern: 'features/**/*.{feature,java,ts}' }],
-      }
-      this.connection.client
-        .register(DidChangeWatchedFilesNotification.type, option)
-        .catch((err) =>
-          this.connection.console.error(
-            'Failed to register DidChangeWatchedFilesNotification: ' + err.message
-          )
-        )
+      return config && config.length === 1 ? config[0] : undefined
+    } catch (err) {
+      await this.connection.console.error('Could not request configuration: ' + err.message)
     }
-    this.connection.console.log('Cucumber Language server initialized')
   }
 
   public capabilities(): ServerCapabilities {
@@ -157,5 +203,43 @@ export class CucumberLanguageServer {
   private validateGherkinDocument(textDocument: TextDocument): void {
     const diagnostics = getGherkinDiagnostics(textDocument.getText(), this.expressions)
     this.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
+  }
+
+  private async updateSettings(settings: Settings) {
+    // TODO: Send WorkDoneProgressBegin notification
+    // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
+
+    const stepDocuments = await this.buildStepDocuments(
+      settings.features,
+      settings.stepdefinitions,
+      settings.language
+    )
+    await this.connection.console.info(
+      `Built ${stepDocuments.length} step documents for auto complete`
+    )
+    this.index = jsSearchIndex(stepDocuments)
+
+    // TODO: Send WorkDoneProgressEnd notification
+  }
+
+  private async buildStepDocuments(
+    gherkinGlobs: readonly string[],
+    glueGlobs: readonly string[],
+    languageName: LanguageName
+  ): Promise<readonly StepDocument[]> {
+    const gherkinSources = await loadAll(gherkinGlobs)
+    await this.connection.console.info(`Found ${gherkinSources.length} feature files`)
+    const stepTexts = gherkinSources.reduce<readonly string[]>(
+      (prev, gherkinSource) => prev.concat(buildStepTexts(gherkinSource)),
+      []
+    )
+    await this.connection.console.info(`Found ${stepTexts.length} steps in those feature files`)
+    const glueSources = await loadAll(glueGlobs)
+    await this.connection.console.info(`Found ${glueSources.length} ${languageName} files`)
+    const expressions = this.expressionBuilder.build(languageName, glueSources)
+    await this.connection.console.info(
+      `Found ${expressions.length} step definitions in those files`
+    )
+    return buildStepDocuments(stepTexts, expressions)
   }
 }

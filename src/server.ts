@@ -1,24 +1,13 @@
+import { TextDocuments } from 'vscode-languageserver'
 import { createConnection, ProposedFeatures } from 'vscode-languageserver/node'
+import { TextDocument } from 'vscode-languageserver-textdocument'
 
-import { CucumberLanguageServer } from './CucumberLanguageServer.js'
+import { CucumberLanguageServer } from './CucumberLanguageServer'
 
 const connection = createConnection(ProposedFeatures.all)
-let server: CucumberLanguageServer
+const documents = new TextDocuments(TextDocument)
 
-connection.onInitialize(async (params) => {
-  connection.console.info('CucumberLanguageServer initializing...')
-  server = await CucumberLanguageServer.create(connection, params)
-  connection.console.info('CucumberLanguageServer initialized')
-  return {
-    capabilities: server.capabilities(),
-    serverInfo: server.info(),
-  }
-})
-
-connection.onInitialized(() => {
-  server.initialize()
-})
-
+new CucumberLanguageServer(connection, documents)
 connection.listen()
 
 // Don't die on unhandled Promise rejections
