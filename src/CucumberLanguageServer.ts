@@ -14,8 +14,6 @@ import {
   Connection,
   DidChangeConfigurationNotification,
   DidChangeWatchedFilesNotification,
-  DidChangeWatchedFilesRegistrationOptions,
-  InitializeParams,
   ServerCapabilities,
   TextDocuments,
   TextDocumentSyncKind,
@@ -36,89 +34,110 @@ type ServerInfo = {
 export class CucumberLanguageServer {
   private expressions: readonly Expression[] = []
   private index: Index
-  private expressionBuilder: ExpressionBuilder
+  private expressionBuilder = new ExpressionBuilder()
 
   constructor(
     private readonly connection: Connection,
     private readonly documents: TextDocuments<TextDocument>
   ) {
+    connection.onInitialize(async (params) => {
+      await connection.console.info(
+        'CucumberLanguageServer initializing: ' + JSON.stringify(params, null, 2)
+      )
+
+      await this.expressionBuilder.init({
+        // Relative to dist/src/cjs
+        java: `${__dirname}/../../../tree-sitter-java.wasm`,
+        typescript: `${__dirname}/../../../tree-sitter-typescript.wasm`,
+      })
+
+      if (params.capabilities.workspace?.configuration) {
+        connection.onDidChangeConfiguration((params) => {
+          this.connection.console.log(
+            '*** onDidChangeConfiguration: ' + JSON.stringify(params, null, 2)
+          )
+          this.updateSettings(<Settings>params.settings).catch((err) => {
+            this.connection.console.error(`Failed to update settings: ${err.message}`)
+          })
+        })
+        // await connection.client.register(DidChangeConfigurationNotification.type, undefined)
+      } else {
+        console.log('*** Disabled onDidChangeConfiguration')
+      }
+
+      if (params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration) {
+        connection.onDidChangeWatchedFiles(async ({ changes }) => {
+          if (!changes) {
+            await connection.console.error('*** onDidChangeWatchedFiles - no changes??')
+          } else {
+            await connection.console.info(`*** onDidChangeWatchedFiles`)
+          }
+        })
+        // await connection.client.register(DidChangeWatchedFilesNotification.type, {
+        //   // TODO: Take from settings
+        //   watchers: [{ globPattern: 'features/**/*.{feature,java,ts}' }],
+        // })
+      } else {
+        console.log('*** Disabled onDidChangeWatchedFiles')
+      }
+
+      if (params.capabilities.textDocument?.semanticTokens) {
+        connection.languages.semanticTokens.on((semanticTokenParams) => {
+          const doc = documents.get(semanticTokenParams.textDocument.uri)
+          if (!doc) return { data: [] }
+          const gherkinSource = doc.getText()
+          return getGherkinSemanticTokens(gherkinSource, this.expressions)
+        })
+      } else {
+        console.log('*** Disabled semanticTokens')
+      }
+
+      if (params.capabilities.textDocument?.completion?.completionItem?.snippetSupport) {
+        connection.onCompletion((params) => {
+          if (!this.index) return []
+          const doc = documents.get(params.textDocument.uri)
+          if (!doc) return []
+          const gherkinSource = doc.getText()
+          return getGherkinCompletionItems(gherkinSource, params.position.line, this.index)
+        })
+
+        connection.onCompletionResolve((item) => item)
+      } else {
+        console.log('*** Disabled onCompletion')
+      }
+
+      if (params.capabilities.textDocument?.formatting) {
+        connection.onDocumentFormatting((params) => {
+          const doc = documents.get(params.textDocument.uri)
+          if (!doc) return []
+          const gherkinSource = doc.getText()
+          return getGherkinFormattingEdits(gherkinSource)
+        })
+      } else {
+        console.log('*** Disabled onDocumentFormatting')
+      }
+
+      await connection.console.info('Cucumber Language server initialized')
+
+      return {
+        capabilities: this.capabilities(),
+        serverInfo: this.info(),
+      }
+    })
+
+    connection.onInitialized(() => {
+      console.log('*** onInitialized')
+    })
+
     documents.listen(connection)
 
     // The content of a text document has changed. This event is emitted
     // when the text document is first opened or when its content has changed.
     documents.onDidChangeContent((change) => {
-      connection.console.log(`*** onDidChangeContent: ${change.document.uri}`)
-      connection.console.log(
-        'DOCS:' +
-          JSON.stringify(
-            documents.all().map((d) => d.uri),
-            null,
-            2
-          )
-      )
       if (change.document.uri.match(/\.feature$/)) {
         this.validateGherkinDocument(change.document)
       }
     })
-
-    connection.onDidChangeConfiguration((params) => {
-      this.updateSettings(<Settings>params.settings).catch((err) => {
-        this.connection.console.error(`Failed to update settings: ${err.message}`)
-      })
-    })
-
-    connection.onCompletion((params) => {
-      const doc = documents.get(params.textDocument.uri)
-      if (!doc || !this.index) return []
-      const gherkinSource = doc.getText()
-      return getGherkinCompletionItems(gherkinSource, params.position.line, this.index)
-    })
-
-    connection.onCompletionResolve((item) => item)
-
-    connection.languages.semanticTokens.on((semanticTokenParams) => {
-      const doc = documents.get(semanticTokenParams.textDocument.uri)
-      if (!doc) return { data: [] }
-      const gherkinSource = doc.getText()
-      return getGherkinSemanticTokens(gherkinSource, this.expressions)
-    })
-
-    connection.onDocumentFormatting((params) => {
-      const doc = documents.get(params.textDocument.uri)
-      if (!doc) return []
-      const gherkinSource = doc.getText()
-      return getGherkinFormattingEdits(gherkinSource)
-    })
-  }
-
-  public initialize(params: InitializeParams, expressionBuilder: ExpressionBuilder) {
-    this.expressionBuilder = expressionBuilder
-    if (params.capabilities.workspace?.configuration) {
-      this.connection.client
-        .register(DidChangeConfigurationNotification.type, undefined)
-        .catch((err) =>
-          this.connection.console.error('Failed to register change notification: ' + err.message)
-        )
-    }
-    if (params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration) {
-      this.connection.onDidChangeWatchedFiles(async ({ changes }) => {
-        this.connection.console.log(
-          `*** onDidChangeWatchedFiles: ${JSON.stringify(changes, null, 2)}`
-        )
-      })
-
-      const option: DidChangeWatchedFilesRegistrationOptions = {
-        watchers: [{ globPattern: 'features/**/*.{feature,java,ts}' }],
-      }
-      this.connection.client
-        .register(DidChangeWatchedFilesNotification.type, option)
-        .catch((err) =>
-          this.connection.console.error(
-            'Failed to register DidChangeWatchedFilesNotification: ' + err.message
-          )
-        )
-    }
-    this.connection.console.log('Cucumber Language server initialized')
   }
 
   public capabilities(): ServerCapabilities {
@@ -163,8 +182,8 @@ export class CucumberLanguageServer {
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
 
     const stepDocuments = await this.buildStepDocuments(
-      settings.gherkinGlobs,
-      settings.glueGlobs,
+      settings.features,
+      settings.stepdefinitions,
       settings.language
     )
     this.index = jsSearchIndex(stepDocuments)

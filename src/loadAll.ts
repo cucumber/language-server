@@ -1,5 +1,5 @@
 import fg from 'fast-glob'
-import fs from 'node:fs/promises'
+import fs from 'fs/promises'
 
 export async function loadAll(globs: readonly string[]): Promise<readonly string[]> {
   const pathPromises = globs.reduce<Promise<string[]>[]>((prev, glob) => {

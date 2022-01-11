@@ -22,7 +22,6 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { CucumberLanguageServer } from '../src/CucumberLanguageServer.js'
-import { startServer } from '../src/startServer'
 import { Settings } from '../src/types'
 
 describe('CucumberLanguageServer', () => {
@@ -44,15 +43,46 @@ describe('CucumberLanguageServer', () => {
     clientConnection.listen()
     serverConnection = createConnection(inputStream, outputStream)
     documents = new TextDocuments(TextDocument)
-    startServer(serverConnection, documents)
 
-    const init: InitializeParams = {
-      rootUri: 'file:///home/dirkb',
+    new CucumberLanguageServer(serverConnection, documents)
+    serverConnection.listen()
+
+    const initializeParams: InitializeParams = {
+      rootUri: `file://${process.cwd()}`,
       processId: 1,
-      capabilities: {},
+      capabilities: {
+        workspace: {
+          configuration: true,
+          didChangeWatchedFiles: {
+            dynamicRegistration: true,
+          },
+        },
+        textDocument: {
+          moniker: {
+            dynamicRegistration: false,
+          },
+          completion: {
+            completionItem: {
+              snippetSupport: true,
+            },
+          },
+          semanticTokens: {
+            tokenTypes: [],
+            tokenModifiers: [],
+            formats: [],
+            requests: {},
+          },
+          formatting: {
+            dynamicRegistration: true,
+          },
+        },
+      },
       workspaceFolders: null,
     }
-    const { serverInfo } = await clientConnection.sendRequest(InitializeRequest.type, init)
+    const { serverInfo } = await clientConnection.sendRequest(
+      InitializeRequest.type,
+      initializeParams
+    )
     assert.strictEqual(serverInfo?.name, 'Cucumber Language Server')
   })
 
@@ -67,8 +97,8 @@ describe('CucumberLanguageServer', () => {
       // First we need to configure the server, telling it where to find Gherkin documents and Glue code
       const settings: Settings = {
         language: 'typescript',
-        gherkinGlobs: ['test/testdata/gherkin/*.feature'],
-        glueGlobs: ['test/testdata/typescript/*.xts'],
+        features: ['test/testdata/gherkin/*.feature'],
+        stepdefinitions: ['test/testdata/typescript/*.xts'],
       }
       const configParams: DidChangeConfigurationParams = {
         settings,
