@@ -3,12 +3,14 @@ import { Duplex } from 'stream'
 import { Logger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node'
 import {
   CompletionItem,
+  CompletionItemKind,
   Connection,
   createProtocolConnection,
   DidChangeConfigurationNotification,
   DidChangeConfigurationParams,
   InitializeParams,
   InitializeRequest,
+  InsertTextFormat,
   ProtocolConnection,
   TextDocuments,
 } from 'vscode-languageserver'
@@ -103,8 +105,8 @@ describe('CucumberLanguageServer', () => {
       const expected: CompletionItem[] = [
         {
           label: 'I have {int} cukes',
-          insertTextFormat: 2,
-          kind: 1,
+          insertTextFormat: InsertTextFormat.Snippet,
+          kind: CompletionItemKind.Text,
           textEdit: {
             newText: 'I have ${1|5,8|} cukes',
             range: {
