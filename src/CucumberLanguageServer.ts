@@ -8,6 +8,7 @@ import {
   Index,
   jsSearchIndex,
   semanticTokenTypes,
+  StepDocument,
 } from '@cucumber/language-service'
 import {
   Connection,
@@ -19,12 +20,11 @@ import {
   TextDocuments,
   TextDocumentSyncKind,
 } from 'vscode-languageserver'
-import { WorkDoneProgressBegin } from 'vscode-languageserver-protocol/lib/common/protocol'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { buildStepTexts } from './buildStepTexts'
 import { loadAll } from './loadAll'
-import { ExpressionBuilder } from './tree-sitter/ExpressionBuilder.js'
+import { ExpressionBuilder, LanguageName } from './tree-sitter/ExpressionBuilder.js'
 import { Settings } from './types'
 import { version } from './version.js'
 
@@ -162,16 +162,28 @@ export class CucumberLanguageServer {
     // TODO: Send WorkDoneProgressBegin notification
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
 
-    const glueSources = await loadAll(settings.glueGlobs)
-    const expressions = this.expressionBuilder.build(settings.language, glueSources)
-    const gherkinSources = await loadAll(settings.gherkinGlobs)
+    const stepDocuments = await this.buildStepDocuments(
+      settings.gherkinGlobs,
+      settings.glueGlobs,
+      settings.language
+    )
+    this.index = jsSearchIndex(stepDocuments)
+
+    // TODO: Send WorkDoneProgressEnd notification
+  }
+
+  private async buildStepDocuments(
+    gherkinGlobs: readonly string[],
+    glueGlobs: readonly string[],
+    languageName: LanguageName
+  ): Promise<readonly StepDocument[]> {
+    const glueSources = await loadAll(glueGlobs)
+    const expressions = this.expressionBuilder.build(languageName, glueSources)
+    const gherkinSources = await loadAll(gherkinGlobs)
     const stepTexts = gherkinSources.reduce<readonly string[]>(
       (prev, gherkinSource) => prev.concat(buildStepTexts(gherkinSource)),
       []
     )
-    const stepDocuments = buildStepDocuments(stepTexts, expressions)
-    this.index = jsSearchIndex(stepDocuments)
-
-    // TODO: Send WorkDoneProgressEnd notification
+    return buildStepDocuments(stepTexts, expressions)
   }
 }
