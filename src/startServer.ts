@@ -1,10 +1,11 @@
-import { Connection } from 'vscode-languageserver'
+import { Connection, TextDocuments } from 'vscode-languageserver'
+import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { CucumberLanguageServer } from './CucumberLanguageServer'
 import { ExpressionBuilder } from './tree-sitter'
 
-export function startServer(connection: Connection) {
-  const server = new CucumberLanguageServer(connection)
+export function startServer(connection: Connection, documents: TextDocuments<TextDocument>) {
+  const server = new CucumberLanguageServer(connection, documents)
   connection.listen()
 
   connection.onInitialize(async (params) => {

@@ -1,10 +1,12 @@
 import { Expression } from '@cucumber/cucumber-expressions'
 import {
+  buildStepDocuments,
   getGherkinCompletionItems,
   getGherkinDiagnostics,
   getGherkinFormattingEdits,
   getGherkinSemanticTokens,
   Index,
+  jsSearchIndex,
   semanticTokenTypes,
 } from '@cucumber/language-service'
 import {
@@ -19,7 +21,10 @@ import {
 } from 'vscode-languageserver'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
+import { buildStepTexts } from './buildStepTexts'
+import { loadAll } from './loadAll'
 import { ExpressionBuilder } from './tree-sitter/ExpressionBuilder.js'
+import { Settings } from './types'
 import { version } from './version.js'
 
 type ServerInfo = {
@@ -30,19 +35,22 @@ type ServerInfo = {
 export class CucumberLanguageServer {
   private expressions: readonly Expression[] = []
   private index: Index
-  private readonly documents = new TextDocuments(TextDocument)
+  private expressionBuilder: ExpressionBuilder
 
-  constructor(private readonly connection: Connection) {
-    this.documents.listen(this.connection)
+  constructor(
+    private readonly connection: Connection,
+    private readonly documents: TextDocuments<TextDocument>
+  ) {
+    documents.listen(connection)
 
     // The content of a text document has changed. This event is emitted
     // when the text document is first opened or when its content has changed.
-    this.documents.onDidChangeContent((change) => {
+    documents.onDidChangeContent((change) => {
       connection.console.log(`*** onDidChangeContent: ${change.document.uri}`)
       connection.console.log(
         'DOCS:' +
           JSON.stringify(
-            this.documents.all().map((d) => d.uri),
+            documents.all().map((d) => d.uri),
             null,
             2
           )
@@ -52,8 +60,14 @@ export class CucumberLanguageServer {
       }
     })
 
+    connection.onDidChangeConfiguration((params) => {
+      this.updateSettings(<Settings>params.settings).catch((err) => {
+        this.connection.console.error(`Failed to update settings: ${err.message}`)
+      })
+    })
+
     connection.onCompletion((params) => {
-      const doc = this.documents.get(params.textDocument.uri)
+      const doc = documents.get(params.textDocument.uri)
       if (!doc || !this.index) return []
       const gherkinSource = doc.getText()
       return getGherkinCompletionItems(gherkinSource, params.position.line, this.index)
@@ -62,14 +76,14 @@ export class CucumberLanguageServer {
     connection.onCompletionResolve((item) => item)
 
     connection.languages.semanticTokens.on((semanticTokenParams) => {
-      const doc = this.documents.get(semanticTokenParams.textDocument.uri)
+      const doc = documents.get(semanticTokenParams.textDocument.uri)
       if (!doc) return { data: [] }
       const gherkinSource = doc.getText()
       return getGherkinSemanticTokens(gherkinSource, this.expressions)
     })
 
     connection.onDocumentFormatting((params) => {
-      const doc = this.documents.get(params.textDocument.uri)
+      const doc = documents.get(params.textDocument.uri)
       if (!doc) return []
       const gherkinSource = doc.getText()
       return getGherkinFormattingEdits(gherkinSource)
@@ -77,6 +91,7 @@ export class CucumberLanguageServer {
   }
 
   public initialize(params: InitializeParams, expressionBuilder: ExpressionBuilder) {
+    this.expressionBuilder = expressionBuilder
     if (params.capabilities.workspace?.configuration) {
       this.connection.client
         .register(DidChangeConfigurationNotification.type, undefined)
@@ -140,5 +155,18 @@ export class CucumberLanguageServer {
   private validateGherkinDocument(textDocument: TextDocument): void {
     const diagnostics = getGherkinDiagnostics(textDocument.getText(), this.expressions)
     this.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
+  }
+
+  private async updateSettings(settings: Settings) {
+    const glueSources = await loadAll(settings.glueGlobs)
+    const expressions = this.expressionBuilder.build(settings.language, glueSources)
+    const gherkinSources = await loadAll(settings.gherkinGlobs)
+    const stepTexts = gherkinSources.reduce<readonly string[]>(
+      (prev, gherkinSource) => prev.concat(buildStepTexts(gherkinSource)),
+      []
+    )
+    const stepDocuments = buildStepDocuments(stepTexts, expressions)
+    this.index = jsSearchIndex(stepDocuments)
+    console.log('Indexed!')
   }
 }

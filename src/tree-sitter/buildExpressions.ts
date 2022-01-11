@@ -19,7 +19,7 @@ export function buildExpressions(
   parser: Parser,
   language: Parser.Language,
   treeSitterQueries: TreeSitterQueries,
-  sources: string[]
+  sources: readonly string[]
 ): readonly Expression[] {
   parser.setLanguage(language)
   const expressions: Expression[] = []
