@@ -2,7 +2,7 @@ import { CucumberExpression, RegularExpression } from '@cucumber/cucumber-expres
 import assert from 'assert'
 
 import { ExpressionBuilder } from '../../src/index.js'
-import { WasmUrls } from '../../src/tree-sitter/types'
+import { Source, WasmUrls } from '../../src/tree-sitter/types'
 
 const wasmUrls: WasmUrls = {
   java: 'tree-sitter-java.wasm',
@@ -21,7 +21,9 @@ describe('ExpressionBuilder', () => {
   })
 
   it('builds expressions from Java source', async () => {
-    const stepdefs = `
+    const stepdefs: Source = {
+      language: 'java',
+      content: `
 class StepDefinitions {
     @Given("I have {int} cukes in my belly"  )
     void method1() {
@@ -39,9 +41,12 @@ class StepDefinitions {
     void method4() {
     }
 }
-`
+`,
+    }
 
-    const parameterTypes = `
+    const parameterTypes: Source = {
+      language: 'java',
+      content: `
 class ParameterTypes {
     @ParameterType("(?:.*) \\\\d{1,2}, \\\\d{4}")
     public Date date(String date) throws ParseException {
@@ -53,9 +58,10 @@ class ParameterTypes {
         return new SimpleDateFormat("yyyy-mm-dd").parse(date);
     }
 }
-`
+`,
+    }
 
-    const expressions = expressionBuilder.build('java', [stepdefs, parameterTypes], [])
+    const expressions = expressionBuilder.build([stepdefs, parameterTypes], [])
     assert.deepStrictEqual(
       expressions.map((e) => e.source),
       ['I have {int} cukes in my belly', 'you have some time', 'a {iso-date}', 'a {date}']
@@ -63,7 +69,9 @@ class ParameterTypes {
   })
 
   it('builds expressions from TypeScript source', async () => {
-    const stepdefs = `
+    const stepdefs: Source = {
+      language: 'typescript',
+      content: `
 import { Given, Then, When } from '@cucumber/cucumber'
 
 Given('a {uuid}', async function (uuid: string) {
@@ -74,9 +82,12 @@ When('a {date}', async function (date: Date) {
 
 Then(/a regexp/, async function () {
 })
-`
+`,
+    }
 
-    const parameterTypes = `
+    const parameterTypes: Source = {
+      language: 'typescript',
+      content: `
 import { defineParameterType } from '@cucumber/cucumber'
 
 defineParameterType({
@@ -90,8 +101,9 @@ defineParameterType({
   regexp: /\\d{4}-\\d{2}-\\d{2}/,
   transformer: (name: string) => new Date(name),
 })
-`
-    const expressions = expressionBuilder.build('typescript', [stepdefs, parameterTypes], [])
+`,
+    }
+    const expressions = expressionBuilder.build([stepdefs, parameterTypes], [])
     assert.deepStrictEqual(
       expressions.map((e) =>
         e instanceof CucumberExpression ? e.source : (e as RegularExpression).regexp

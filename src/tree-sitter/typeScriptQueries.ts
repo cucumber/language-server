@@ -1,4 +1,4 @@
-import { TreeSitterQueries } from './types'
+import { TreeSitterQueries } from './types.js'
 
 export const typeScriptQueries: TreeSitterQueries = {
   defineParameterTypeQueries: [

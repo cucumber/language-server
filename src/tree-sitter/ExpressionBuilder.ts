@@ -5,10 +5,10 @@ import {
 } from '@cucumber/cucumber-expressions'
 import Parser, { Language } from 'web-tree-sitter'
 
-import { ParameterTypeMeta } from '../types'
-import { makeParameterType, recordFromMatch, toString, toStringOrRegExp } from './helpers'
+import { ParameterTypeMeta } from '../types.js'
+import { makeParameterType, recordFromMatch, toString, toStringOrRegExp } from './helpers.js'
 import { javaQueries } from './javaQueries.js'
-import { LanguageName, TreeSitterQueries, WasmUrls } from './types'
+import { LanguageName, Source, TreeSitterQueries, WasmUrls } from './types.js'
 import { typeScriptQueries } from './typeScriptQueries.js'
 
 const treeSitterQueriesByLanguageName: Record<LanguageName, TreeSitterQueries> = {
@@ -33,14 +33,10 @@ export class ExpressionBuilder {
   }
 
   build(
-    languageName: LanguageName,
-    sources: readonly string[],
+    sources: readonly Source[],
     parameterTypes: readonly ParameterTypeMeta[] | undefined
   ): readonly Expression[] {
     if (!this.parser) throw new Error(`Please call init() first`)
-    const language = this.languages[languageName]
-    const treeSitterQueries = treeSitterQueriesByLanguageName[languageName]
-    this.parser.setLanguage(language)
     const expressions: Expression[] = []
     const parameterTypeRegistry = new ParameterTypeRegistry()
     const expressionFactory = new ExpressionFactory(parameterTypeRegistry)
@@ -54,7 +50,11 @@ export class ExpressionBuilder {
     }
 
     for (const source of sources) {
-      const tree = this.parser.parse(source)
+      const language = this.languages[source.language]
+      this.parser.setLanguage(language)
+      const treeSitterQueries = treeSitterQueriesByLanguageName[source.language]
+      const tree = this.parser.parse(source.content)
+
       for (const defineParameterTypeQuery of treeSitterQueries.defineParameterTypeQueries) {
         const matches = language.query(defineParameterTypeQuery).matches(tree.rootNode)
         const records = matches.map((match) => recordFromMatch(match, defineParameterTypeKeys))
@@ -71,7 +71,11 @@ export class ExpressionBuilder {
     }
 
     for (const source of sources) {
-      const tree = this.parser.parse(source)
+      const language = this.languages[source.language]
+      this.parser.setLanguage(language)
+      const treeSitterQueries = treeSitterQueriesByLanguageName[source.language]
+      const tree = this.parser.parse(source.content)
+
       for (const defineStepDefinitionQuery of treeSitterQueries.defineStepDefinitionQueries) {
         const matches = language.query(defineStepDefinitionQuery).matches(tree.rootNode)
         const records = matches.map((match) =>

@@ -20,16 +20,20 @@ import {
 } from 'vscode-languageserver'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
-import { buildStepTexts } from './buildStepTexts'
-import { loadAll } from './loadAll'
+import { buildStepTexts } from './buildStepTexts.js'
+import { loadAll } from './loadAll.js'
 import { ExpressionBuilder } from './tree-sitter/ExpressionBuilder.js'
-import { LanguageName } from './tree-sitter/types'
-import { ParameterTypeMeta, Settings } from './types'
+import { ParameterTypeMeta, Settings } from './types.js'
 import { version } from './version.js'
 
 type ServerInfo = {
   name: string
   version: string
+}
+
+const defaultSettings: Settings = {
+  features: ['src/test/**/*.feature', 'features/**/*.feature'],
+  glue: ['src/test/**/*.java', 'features/**/*.ts'],
 }
 
 export class CucumberLanguageServer {
@@ -164,7 +168,9 @@ export class CucumberLanguageServer {
           },
         ],
       })
-      return config && config.length === 1 ? config[0] : undefined
+      if (config && config.length === 1) {
+        return { defaultSettings, ...config[0] }
+      }
     } catch (err) {
       await this.connection.console.error('Could not request configuration: ' + err.message)
     }
@@ -214,9 +220,8 @@ export class CucumberLanguageServer {
 
     const stepDocuments = await this.buildStepDocuments(
       settings.features,
-      settings.stepdefinitions,
-      settings.language,
-      settings.parametertypes
+      settings.glue,
+      settings.parameterTypes
     )
     await this.connection.console.info(
       `Built ${stepDocuments.length} step documents for auto complete`
@@ -229,21 +234,20 @@ export class CucumberLanguageServer {
   private async buildStepDocuments(
     gherkinGlobs: readonly string[],
     glueGlobs: readonly string[],
-    languageName: LanguageName,
     parameterTypes: readonly ParameterTypeMeta[] | undefined
   ): Promise<readonly StepDocument[]> {
     const gherkinSources = await loadAll(gherkinGlobs)
     await this.connection.console.info(`Found ${gherkinSources.length} feature files`)
     const stepTexts = gherkinSources.reduce<readonly string[]>(
-      (prev, gherkinSource) => prev.concat(buildStepTexts(gherkinSource)),
+      (prev, gherkinSource) => prev.concat(buildStepTexts(gherkinSource.content)),
       []
     )
     await this.connection.console.info(`Found ${stepTexts.length} steps in those feature files`)
     const glueSources = await loadAll(glueGlobs)
-    await this.connection.console.info(`Found ${glueSources.length} ${languageName} files`)
-    this.expressions = this.expressionBuilder.build(languageName, glueSources, parameterTypes)
+    await this.connection.console.info(`Found ${glueSources.length} glue files`)
+    this.expressions = this.expressionBuilder.build(glueSources, parameterTypes)
     await this.connection.console.info(
-      `Found ${this.expressions.length} step definitions in those files`
+      `Found ${this.expressions.length} step definitions in those glue files`
     )
     return buildStepDocuments(stepTexts, this.expressions)
   }
