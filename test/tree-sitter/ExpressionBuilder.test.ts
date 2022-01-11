@@ -1,7 +1,8 @@
 import { CucumberExpression, RegularExpression } from '@cucumber/cucumber-expressions'
 import assert from 'assert'
 
-import { ExpressionBuilder, WasmUrls } from '../../src/index.js'
+import { ExpressionBuilder } from '../../src/index.js'
+import { WasmUrls } from '../../src/tree-sitter/types'
 
 const wasmUrls: WasmUrls = {
   java: 'tree-sitter-java.wasm',

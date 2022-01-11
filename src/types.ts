@@ -1,4 +1,4 @@
-import { LanguageName } from './tree-sitter'
+import { LanguageName } from './tree-sitter/types'
 
 export type ParameterTypeMeta = { name: string; regexp: string }
 

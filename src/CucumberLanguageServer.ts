@@ -22,7 +22,8 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { buildStepTexts } from './buildStepTexts'
 import { loadAll } from './loadAll'
-import { ExpressionBuilder, LanguageName } from './tree-sitter/ExpressionBuilder.js'
+import { ExpressionBuilder } from './tree-sitter/ExpressionBuilder.js'
+import { LanguageName } from './tree-sitter/types'
 import { ParameterTypeMeta, Settings } from './types'
 import { version } from './version.js'
 

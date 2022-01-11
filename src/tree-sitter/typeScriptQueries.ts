@@ -1,4 +1,4 @@
-import { TreeSitterQueries } from './buildExpressions.js'
+import { TreeSitterQueries } from './types'
 
 export const typeScriptQueries: TreeSitterQueries = {
   defineParameterTypeQueries: [
