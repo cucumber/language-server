@@ -1,6 +1,7 @@
 import { Expression } from '@cucumber/cucumber-expressions'
 import Parser, { Language } from 'web-tree-sitter'
 
+import { ParameterTypeMeta } from '../types'
 import { buildExpressions, TreeSitterQueries } from './buildExpressions.js'
 import { javaQueries } from './javaQueries.js'
 import { typeScriptQueries } from './typeScriptQueries.js'
@@ -27,10 +28,14 @@ export class ExpressionBuilder {
     }
   }
 
-  build(languageName: LanguageName, sources: readonly string[]): readonly Expression[] {
+  build(
+    languageName: LanguageName,
+    sources: readonly string[],
+    parameterTypes: readonly ParameterTypeMeta[] | undefined
+  ): readonly Expression[] {
     if (!this.parser) throw new Error(`Please call init() first`)
     const language = this.languages[languageName]
     const treeSitterQueries = treeSitterQueriesByLanguageName[languageName]
-    return buildExpressions(this.parser, language, treeSitterQueries, sources)
+    return buildExpressions(this.parser, language, treeSitterQueries, sources, parameterTypes)
   }
 }

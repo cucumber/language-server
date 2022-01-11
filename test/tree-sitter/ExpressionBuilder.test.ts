@@ -54,7 +54,7 @@ class ParameterTypes {
 }
 `
 
-    const expressions = expressionBuilder.build('java', [stepdefs, parameterTypes])
+    const expressions = expressionBuilder.build('java', [stepdefs, parameterTypes], [])
     assert.deepStrictEqual(
       expressions.map((e) => e.source),
       ['I have {int} cukes in my belly', 'you have some time', 'a {iso-date}', 'a {date}']
@@ -90,8 +90,7 @@ defineParameterType({
   transformer: (name: string) => new Date(name),
 })
 `
-
-    const expressions = expressionBuilder.build('typescript', [stepdefs, parameterTypes])
+    const expressions = expressionBuilder.build('typescript', [stepdefs, parameterTypes], [])
     assert.deepStrictEqual(
       expressions.map((e) =>
         e instanceof CucumberExpression ? e.source : (e as RegularExpression).regexp

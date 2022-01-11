@@ -5,6 +5,7 @@ import {
 } from '@cucumber/cucumber-expressions'
 import Parser from 'web-tree-sitter'
 
+import { ParameterTypeMeta } from '../types'
 import { makeParameterType, recordFromMatch, toString, toStringOrRegExp } from './helpers.js'
 
 const defineStepDefinitionQueryKeys = <const>['expression']
@@ -19,12 +20,21 @@ export function buildExpressions(
   parser: Parser,
   language: Parser.Language,
   treeSitterQueries: TreeSitterQueries,
-  sources: readonly string[]
+  sources: readonly string[],
+  parameterTypes: readonly ParameterTypeMeta[] | undefined
 ): readonly Expression[] {
   parser.setLanguage(language)
   const expressions: Expression[] = []
   const parameterTypeRegistry = new ParameterTypeRegistry()
   const expressionFactory = new ExpressionFactory(parameterTypeRegistry)
+
+  if (parameterTypes) {
+    for (const parameterType of parameterTypes) {
+      parameterTypeRegistry.defineParameterType(
+        makeParameterType(parameterType.name, new RegExp(parameterType.regexp))
+      )
+    }
+  }
 
   for (const source of sources) {
     const tree = parser.parse(source)

@@ -23,7 +23,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 import { buildStepTexts } from './buildStepTexts'
 import { loadAll } from './loadAll'
 import { ExpressionBuilder, LanguageName } from './tree-sitter/ExpressionBuilder.js'
-import { Settings } from './types'
+import { ParameterTypeMeta, Settings } from './types'
 import { version } from './version.js'
 
 type ServerInfo = {
@@ -140,14 +140,15 @@ export class CucumberLanguageServer {
     // The content of a text document has changed. This event is emitted
     // when the text document is first opened or when its content has changed.
     documents.onDidChangeContent(async (change) => {
-      if (change.document.uri.match(/\.feature$/)) {
-        this.validateGherkinDocument(change.document)
-      }
       const settings = await this.getSettings()
       if (settings) {
         await this.updateSettings(settings)
       } else {
         await this.connection.console.warn('Could not get cucumber.* settings')
+      }
+
+      if (change.document.uri.match(/\.feature$/)) {
+        this.validateGherkinDocument(change.document)
       }
       console.log('onDidChangeContent', { settings })
     })
@@ -205,6 +206,7 @@ export class CucumberLanguageServer {
     this.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
   }
 
+  // TODO: This is slow - debounce it
   private async updateSettings(settings: Settings) {
     // TODO: Send WorkDoneProgressBegin notification
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
@@ -212,7 +214,8 @@ export class CucumberLanguageServer {
     const stepDocuments = await this.buildStepDocuments(
       settings.features,
       settings.stepdefinitions,
-      settings.language
+      settings.language,
+      settings.parametertypes
     )
     await this.connection.console.info(
       `Built ${stepDocuments.length} step documents for auto complete`
@@ -225,7 +228,8 @@ export class CucumberLanguageServer {
   private async buildStepDocuments(
     gherkinGlobs: readonly string[],
     glueGlobs: readonly string[],
-    languageName: LanguageName
+    languageName: LanguageName,
+    parameterTypes: readonly ParameterTypeMeta[] | undefined
   ): Promise<readonly StepDocument[]> {
     const gherkinSources = await loadAll(gherkinGlobs)
     await this.connection.console.info(`Found ${gherkinSources.length} feature files`)
@@ -236,10 +240,10 @@ export class CucumberLanguageServer {
     await this.connection.console.info(`Found ${stepTexts.length} steps in those feature files`)
     const glueSources = await loadAll(glueGlobs)
     await this.connection.console.info(`Found ${glueSources.length} ${languageName} files`)
-    const expressions = this.expressionBuilder.build(languageName, glueSources)
+    this.expressions = this.expressionBuilder.build(languageName, glueSources, parameterTypes)
     await this.connection.console.info(
-      `Found ${expressions.length} step definitions in those files`
+      `Found ${this.expressions.length} step definitions in those files`
     )
-    return buildStepDocuments(stepTexts, expressions)
+    return buildStepDocuments(stepTexts, this.expressions)
   }
 }
