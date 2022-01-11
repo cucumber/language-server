@@ -23,7 +23,7 @@ import { CucumberLanguageServer } from '../src/CucumberLanguageServer.js'
 import { startServer } from '../src/startServer'
 import { Settings } from '../src/types'
 
-describe.only('CucumberLanguageServer', () => {
+describe('CucumberLanguageServer', () => {
   let inputStream: Duplex
   let outputStream: Duplex
   let clientConnection: ProtocolConnection
