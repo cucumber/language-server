@@ -1,4 +1,3 @@
-// Uses .xts extension so the build doesn't consider it real source
 import { Given } from '@cucumber/cucumber'
 import assert from 'assert'
 

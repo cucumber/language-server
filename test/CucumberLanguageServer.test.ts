@@ -105,8 +105,8 @@ describe('CucumberLanguageServer', () => {
     it('returns completion items for typescript', async () => {
       // First we need to configure the server, telling it where to find Gherkin documents and Glue code
       const settings: Settings = {
-        features: ['test/testdata/gherkin/*.feature'],
-        glue: ['test/testdata/typescript/*.xts'],
+        features: ['testdata/gherkin/*.feature'],
+        glue: ['testdata/typescript/*.ts'],
       }
       const configParams: DidChangeConfigurationParams = {
         settings,
