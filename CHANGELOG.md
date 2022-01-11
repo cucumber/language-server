@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Added settings so the client can specify where the source code is, so the server
+  can build the index for auto complete.
+### Fixed
+- Fixed auto complete by re-enabling the building of the index that backs it. Only
+  enabled after the client has updated settings.
+
 ## [0.3.3] - 2022-01-10
 ### Fixed
 - Export `./bin/cucumber-language-server.cjs`
