@@ -11,9 +11,9 @@ import {
   StepDocument,
 } from '@cucumber/language-service'
 import {
+  ConfigurationRequest,
   Connection,
   DidChangeConfigurationNotification,
-  DidChangeWatchedFilesNotification,
   ServerCapabilities,
   TextDocuments,
   TextDocumentSyncKind,
@@ -41,9 +41,9 @@ export class CucumberLanguageServer {
     private readonly documents: TextDocuments<TextDocument>
   ) {
     connection.onInitialize(async (params) => {
-      await connection.console.info(
-        'CucumberLanguageServer initializing: ' + JSON.stringify(params, null, 2)
-      )
+      // await connection.console.info(
+      //   'CucumberLanguageServer initializing: ' + JSON.stringify(params, null, 2)
+      // )
 
       await this.expressionBuilder.init({
         // Relative to dist/src/cjs
@@ -60,7 +60,13 @@ export class CucumberLanguageServer {
             this.connection.console.error(`Failed to update settings: ${err.message}`)
           })
         })
-        // await connection.client.register(DidChangeConfigurationNotification.type, undefined)
+        try {
+          await connection.client.register(DidChangeConfigurationNotification.type)
+        } catch (err) {
+          await connection.console.warn(
+            'Could not register DidChangeConfigurationNotification: ' + err.message
+          )
+        }
       } else {
         console.log('*** Disabled onDidChangeConfiguration')
       }
@@ -133,11 +139,33 @@ export class CucumberLanguageServer {
 
     // The content of a text document has changed. This event is emitted
     // when the text document is first opened or when its content has changed.
-    documents.onDidChangeContent((change) => {
+    documents.onDidChangeContent(async (change) => {
       if (change.document.uri.match(/\.feature$/)) {
         this.validateGherkinDocument(change.document)
       }
+      const settings = await this.getSettings()
+      if (settings) {
+        await this.updateSettings(settings)
+      } else {
+        await this.connection.console.warn('Could not get cucumber.* settings')
+      }
+      console.log('onDidChangeContent', { settings })
     })
+  }
+
+  private async getSettings(): Promise<Settings | undefined> {
+    try {
+      const config = await this.connection.sendRequest(ConfigurationRequest.type, {
+        items: [
+          {
+            section: 'cucumber',
+          },
+        ],
+      })
+      return config && config.length === 1 ? config[0] : undefined
+    } catch (err) {
+      await this.connection.console.error('Could not request configuration: ' + err.message)
+    }
   }
 
   public capabilities(): ServerCapabilities {
@@ -186,6 +214,9 @@ export class CucumberLanguageServer {
       settings.stepdefinitions,
       settings.language
     )
+    await this.connection.console.info(
+      `Built ${stepDocuments.length} step documents for auto complete`
+    )
     this.index = jsSearchIndex(stepDocuments)
 
     // TODO: Send WorkDoneProgressEnd notification
@@ -196,12 +227,18 @@ export class CucumberLanguageServer {
     glueGlobs: readonly string[],
     languageName: LanguageName
   ): Promise<readonly StepDocument[]> {
-    const glueSources = await loadAll(glueGlobs)
-    const expressions = this.expressionBuilder.build(languageName, glueSources)
     const gherkinSources = await loadAll(gherkinGlobs)
+    await this.connection.console.info(`Found ${gherkinSources.length} feature files`)
     const stepTexts = gherkinSources.reduce<readonly string[]>(
       (prev, gherkinSource) => prev.concat(buildStepTexts(gherkinSource)),
       []
+    )
+    await this.connection.console.info(`Found ${stepTexts.length} steps in those feature files`)
+    const glueSources = await loadAll(glueGlobs)
+    await this.connection.console.info(`Found ${glueSources.length} ${languageName} files`)
+    const expressions = this.expressionBuilder.build(languageName, glueSources)
+    await this.connection.console.info(
+      `Found ${expressions.length} step definitions in those files`
     )
     return buildStepDocuments(stepTexts, expressions)
   }

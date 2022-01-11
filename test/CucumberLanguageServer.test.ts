@@ -11,6 +11,7 @@ import {
   InitializeParams,
   InitializeRequest,
   InsertTextFormat,
+  LogMessageNotification,
   ProtocolConnection,
   TextDocuments,
 } from 'vscode-languageserver'
@@ -40,6 +41,14 @@ describe('CucumberLanguageServer', () => {
       new StreamMessageWriter(inputStream),
       logger
     )
+    clientConnection.onError((err) => {
+      console.error('ERROR', err)
+    })
+    // Ignore log messages
+    clientConnection.onNotification(LogMessageNotification.type, () => undefined)
+    clientConnection.onUnhandledNotification((n) => {
+      console.error('Unhandled notification', n)
+    })
     clientConnection.listen()
     serverConnection = createConnection(inputStream, outputStream)
     documents = new TextDocuments(TextDocument)
