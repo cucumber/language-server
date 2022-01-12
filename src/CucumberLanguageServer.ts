@@ -42,6 +42,7 @@ export class CucumberLanguageServer {
   private expressions: readonly Expression[] = []
   private index: Index
   private expressionBuilder = new ExpressionBuilder()
+  private settingsUpdateTimeout: NodeJS.Timeout
 
   constructor(
     private readonly connection: Connection,
@@ -134,9 +135,13 @@ export class CucumberLanguageServer {
     // The content of a text document has changed. This event is emitted
     // when the text document is first opened or when its content has changed.
     documents.onDidChangeContent(async (change) => {
+      if (change.document.uri.match(/\.feature$/)) {
+        this.validateGherkinDocument(change.document)
+      }
       const settings = await this.getSettings()
       if (settings) {
-        await this.updateSettings(settings)
+        this.scheduleSettingsUpdate(settings, change.document)
+        // await this.updateSettings(settings)
       } else {
         await this.connection.console.error('Could not get cucumber.* settings')
       }
@@ -145,28 +150,6 @@ export class CucumberLanguageServer {
         this.validateGherkinDocument(change.document)
       }
     })
-  }
-
-  private async getSettings(): Promise<Settings | undefined> {
-    try {
-      const config = await this.connection.sendRequest(ConfigurationRequest.type, {
-        items: [
-          {
-            section: 'cucumber',
-          },
-        ],
-      })
-      if (config && config.length === 1) {
-        const settings: Settings = config[0]
-        return {
-          features: getArray(settings.features, defaultSettings.features),
-          glue: getArray(settings.glue, defaultSettings.glue),
-          parameterTypes: getArray(settings.parameterTypes, defaultSettings.parameterTypes),
-        }
-      }
-    } catch (err) {
-      this.connection.console.error('Failed to request configuration: ' + err.message)
-    }
   }
 
   public capabilities(): ServerCapabilities {
@@ -206,7 +189,44 @@ export class CucumberLanguageServer {
     this.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
   }
 
-  // TODO: This is slow - debounce it
+  private scheduleSettingsUpdate(settings: Settings, textDocument: TextDocument) {
+    clearTimeout(this.settingsUpdateTimeout)
+    // Update settings immediately the first time
+    const timeoutMillis = this.settingsUpdateTimeout ? 3000 : 0
+    this.connection.console.info(`Scheduling settings update in ${timeoutMillis} ms`)
+    this.settingsUpdateTimeout = setTimeout(() => {
+      this.updateSettings(settings)
+        .then(() => {
+          if (textDocument.uri.match(/\.feature$/)) {
+            this.validateGherkinDocument(textDocument)
+          }
+        })
+        .catch((err) => this.connection.console.error(`Failed to update settings: ${err.message}`))
+    }, timeoutMillis)
+  }
+
+  private async getSettings(): Promise<Settings | undefined> {
+    try {
+      const config = await this.connection.sendRequest(ConfigurationRequest.type, {
+        items: [
+          {
+            section: 'cucumber',
+          },
+        ],
+      })
+      if (config && config.length === 1) {
+        const settings: Settings = config[0]
+        return {
+          features: getArray(settings.features, defaultSettings.features),
+          glue: getArray(settings.glue, defaultSettings.glue),
+          parameterTypes: getArray(settings.parameterTypes, defaultSettings.parameterTypes),
+        }
+      }
+    } catch (err) {
+      this.connection.console.error('Failed to request configuration: ' + err.message)
+    }
+  }
+
   private async updateSettings(settings: Settings) {
     // TODO: Send WorkDoneProgressBegin notification
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
