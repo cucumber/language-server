@@ -8,11 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
-- Added settings so the client can specify where the source code is, so the server
-  can build the index for auto complete.
+- Added settings (with reasonable defaults) so the client can specify where the source 
+  code is. The server uses this for auto complete and detecting defined steps.
+
 ### Fixed
-- Fixed auto complete by re-enabling the building of the index that backs it. Only
-  enabled after the client has updated settings.
+- Fixed auto complete by re-enabling the building of the index that backs it.
 
 ## [0.3.3] - 2022-01-10
 ### Fixed
