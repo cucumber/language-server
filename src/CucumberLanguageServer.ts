@@ -48,9 +48,7 @@ export class CucumberLanguageServer {
     private readonly documents: TextDocuments<TextDocument>
   ) {
     connection.onInitialize(async (params) => {
-      // await connection.console.info(
-      //   'CucumberLanguageServer initializing: ' + JSON.stringify(params, null, 2)
-      // )
+      connection.console.info('CucumberLanguageServer initializing...')
 
       await this.expressionBuilder.init({
         // Relative to dist/src/cjs
@@ -60,38 +58,27 @@ export class CucumberLanguageServer {
 
       if (params.capabilities.workspace?.configuration) {
         connection.onDidChangeConfiguration((params) => {
-          this.connection.console.log(
-            '*** onDidChangeConfiguration: ' + JSON.stringify(params, null, 2)
-          )
           this.updateSettings(<Settings>params.settings).catch((err) => {
-            this.connection.console.error(`Failed to update settings: ${err.message}`)
+            connection.console.error(`Failed to update settings: ${err.message}`)
           })
         })
         try {
           await connection.client.register(DidChangeConfigurationNotification.type)
         } catch (err) {
-          await connection.console.warn(
-            'Could not register DidChangeConfigurationNotification: ' + err.message
+          connection.console.info(
+            `Could not register DidChangeConfigurationNotification: "${err.message}" - this is OK`
           )
         }
       } else {
-        console.log('*** Disabled onDidChangeConfiguration')
+        this.connection.console.info('onDidChangeConfiguration is disabled')
       }
 
       if (params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration) {
-        connection.onDidChangeWatchedFiles(async ({ changes }) => {
-          if (!changes) {
-            await connection.console.error('*** onDidChangeWatchedFiles - no changes??')
-          } else {
-            await connection.console.info(`*** onDidChangeWatchedFiles`)
-          }
+        connection.onDidChangeWatchedFiles(async () => {
+          connection.console.info(`onDidChangeWatchedFiles`)
         })
-        // await connection.client.register(DidChangeWatchedFilesNotification.type, {
-        //   // TODO: Take from settings
-        //   watchers: [{ globPattern: 'features/**/*.{feature,java,ts}' }],
-        // })
       } else {
-        console.log('*** Disabled onDidChangeWatchedFiles')
+        connection.console.info('onDidChangeWatchedFiles is disabled')
       }
 
       if (params.capabilities.textDocument?.semanticTokens) {
@@ -102,7 +89,7 @@ export class CucumberLanguageServer {
           return getGherkinSemanticTokens(gherkinSource, this.expressions)
         })
       } else {
-        console.log('*** Disabled semanticTokens')
+        connection.console.info('semanticTokens is disabled')
       }
 
       if (params.capabilities.textDocument?.completion?.completionItem?.snippetSupport) {
@@ -116,7 +103,7 @@ export class CucumberLanguageServer {
 
         connection.onCompletionResolve((item) => item)
       } else {
-        console.log('*** Disabled onCompletion')
+        connection.console.info('onCompletion is disabled')
       }
 
       if (params.capabilities.textDocument?.formatting) {
@@ -127,10 +114,10 @@ export class CucumberLanguageServer {
           return getGherkinFormattingEdits(gherkinSource)
         })
       } else {
-        console.log('*** Disabled onDocumentFormatting')
+        connection.console.info('onDocumentFormatting is disabled')
       }
 
-      await connection.console.info('Cucumber Language server initialized')
+      connection.console.info('CucumberLanguageServer initialized!')
 
       return {
         capabilities: this.capabilities(),
@@ -139,7 +126,7 @@ export class CucumberLanguageServer {
     })
 
     connection.onInitialized(() => {
-      console.log('*** onInitialized')
+      this.connection.console.info('onInitialized')
     })
 
     documents.listen(connection)
@@ -151,13 +138,12 @@ export class CucumberLanguageServer {
       if (settings) {
         await this.updateSettings(settings)
       } else {
-        await this.connection.console.warn('Could not get cucumber.* settings')
+        await this.connection.console.error('Could not get cucumber.* settings')
       }
 
       if (change.document.uri.match(/\.feature$/)) {
         this.validateGherkinDocument(change.document)
       }
-      console.log('onDidChangeContent', { settings })
     })
   }
 
@@ -172,7 +158,6 @@ export class CucumberLanguageServer {
       })
       if (config && config.length === 1) {
         const settings: Settings = config[0]
-        await this.connection.console.log(`SETTINGS: ${JSON.stringify(settings, null, 2)}`)
         return {
           features: getArray(settings.features, defaultSettings.features),
           glue: getArray(settings.glue, defaultSettings.glue),
@@ -180,7 +165,7 @@ export class CucumberLanguageServer {
         }
       }
     } catch (err) {
-      await this.connection.console.error('Could not request configuration: ' + err.message)
+      this.connection.console.error('Failed to request configuration: ' + err.message)
     }
   }
 
@@ -245,14 +230,14 @@ export class CucumberLanguageServer {
     parameterTypes: readonly ParameterTypeMeta[] | undefined
   ): Promise<readonly StepDocument[]> {
     const gherkinSources = await loadAll(gherkinGlobs)
-    await this.connection.console.info(`Found ${gherkinSources.length} feature files`)
+    await this.connection.console.info(`Found ${gherkinSources.length} feature file(s)`)
     const stepTexts = gherkinSources.reduce<readonly string[]>(
       (prev, gherkinSource) => prev.concat(buildStepTexts(gherkinSource.content)),
       []
     )
     await this.connection.console.info(`Found ${stepTexts.length} steps in those feature files`)
     const glueSources = await loadAll(glueGlobs)
-    await this.connection.console.info(`Found ${glueSources.length} glue files`)
+    await this.connection.console.info(`Found ${glueSources.length} glue file(s)`)
     this.expressions = this.expressionBuilder.build(glueSources, parameterTypes)
     await this.connection.console.info(
       `Found ${this.expressions.length} step definitions in those glue files`
