@@ -31,9 +31,11 @@ type ServerInfo = {
   version: string
 }
 
+// In order to allow 0-config in LSP clients we provide default settings
 const defaultSettings: Settings = {
   features: ['src/test/**/*.feature', 'features/**/*.feature'],
   glue: ['src/test/**/*.java', 'features/**/*.ts'],
+  parameterTypes: [],
 }
 
 export class CucumberLanguageServer {
@@ -169,7 +171,13 @@ export class CucumberLanguageServer {
         ],
       })
       if (config && config.length === 1) {
-        return { defaultSettings, ...config[0] }
+        const settings: Settings = config[0]
+        await this.connection.console.log(`SETTINGS: ${JSON.stringify(settings, null, 2)}`)
+        return {
+          features: getArray(settings.features, defaultSettings.features),
+          glue: getArray(settings.glue, defaultSettings.glue),
+          parameterTypes: getArray(settings.parameterTypes, defaultSettings.parameterTypes),
+        }
       }
     } catch (err) {
       await this.connection.console.error('Could not request configuration: ' + err.message)
@@ -251,4 +259,9 @@ export class CucumberLanguageServer {
     )
     return buildStepDocuments(stepTexts, this.expressions)
   }
+}
+
+function getArray<T>(arr: readonly T[] | undefined | null, defaultArr: readonly T[]): readonly T[] {
+  if (!Array.isArray(arr) || arr.length === 0) return defaultArr
+  return arr
 }

@@ -103,10 +103,13 @@ describe('CucumberLanguageServer', () => {
 
   context('textDocument/completion', () => {
     it('returns completion items for typescript', async () => {
-      // First we need to configure the server, telling it where to find Gherkin documents and Glue code
+      // First we need to configure the server, telling it where to find Gherkin documents and Glue code.
+      // Note that *pushing* settings from the client to the server is deprecated in the LSP. We're only using it
+      // here because it's easier to implement in the test.
       const settings: Settings = {
         features: ['testdata/gherkin/*.feature'],
         glue: ['testdata/typescript/*.ts'],
+        parameterTypes: [],
       }
       const configParams: DidChangeConfigurationParams = {
         settings,
