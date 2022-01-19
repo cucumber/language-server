@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Do not crash anymore when cucumber settings are missing
+
 ## [0.4.0] - 2022-01-19
 
 ### Added

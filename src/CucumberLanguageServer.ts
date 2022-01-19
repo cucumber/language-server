@@ -215,11 +215,12 @@ export class CucumberLanguageServer {
         ],
       })
       if (config && config.length === 1) {
-        const settings: Settings = config[0]
+        const settings: Settings | null = config[0]
+
         return {
-          features: getArray(settings.features, defaultSettings.features),
-          glue: getArray(settings.glue, defaultSettings.glue),
-          parameterTypes: getArray(settings.parameterTypes, defaultSettings.parameterTypes),
+          features: getArray(settings?.features, defaultSettings.features),
+          glue: getArray(settings?.glue, defaultSettings.glue),
+          parameterTypes: getArray(settings?.parameterTypes, defaultSettings.parameterTypes),
         }
       }
     } catch (err) {
