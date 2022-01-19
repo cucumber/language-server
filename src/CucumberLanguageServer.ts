@@ -40,9 +40,9 @@ const defaultSettings: Settings = {
 
 export class CucumberLanguageServer {
   private expressions: readonly Expression[] = []
-  private index: Index
+  private searchIndex: Index
   private expressionBuilder = new ExpressionBuilder()
-  private settingsUpdateTimeout: NodeJS.Timeout
+  private reindexingTimeout: NodeJS.Timeout
 
   constructor(
     private readonly connection: Connection,
@@ -59,7 +59,7 @@ export class CucumberLanguageServer {
 
       if (params.capabilities.workspace?.configuration) {
         connection.onDidChangeConfiguration((params) => {
-          this.updateSettings(<Settings>params.settings).catch((err) => {
+          this.reindex(<Settings>params.settings).catch((err) => {
             connection.console.error(`Failed to update settings: ${err.message}`)
           })
         })
@@ -95,11 +95,11 @@ export class CucumberLanguageServer {
 
       if (params.capabilities.textDocument?.completion?.completionItem?.snippetSupport) {
         connection.onCompletion((params) => {
-          if (!this.index) return []
+          if (!this.searchIndex) return []
           const doc = documents.get(params.textDocument.uri)
           if (!doc) return []
           const gherkinSource = doc.getText()
-          return getGherkinCompletionItems(gherkinSource, params.position.line, this.index)
+          return getGherkinCompletionItems(gherkinSource, params.position.line, this.searchIndex)
         })
 
         connection.onCompletionResolve((item) => item)
@@ -140,8 +140,7 @@ export class CucumberLanguageServer {
       }
       const settings = await this.getSettings()
       if (settings) {
-        this.scheduleSettingsUpdate(settings, change.document)
-        // await this.updateSettings(settings)
+        this.scheduleReindexing(settings, change.document)
       } else {
         await this.connection.console.error('Could not get cucumber.* settings')
       }
@@ -189,19 +188,19 @@ export class CucumberLanguageServer {
     this.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
   }
 
-  private scheduleSettingsUpdate(settings: Settings, textDocument: TextDocument) {
-    clearTimeout(this.settingsUpdateTimeout)
-    // Update settings immediately the first time
-    const timeoutMillis = this.settingsUpdateTimeout ? 3000 : 0
-    this.connection.console.info(`Scheduling settings update in ${timeoutMillis} ms`)
-    this.settingsUpdateTimeout = setTimeout(() => {
-      this.updateSettings(settings)
+  private scheduleReindexing(settings: Settings, textDocument: TextDocument) {
+    clearTimeout(this.reindexingTimeout)
+    // Update index immediately the first time
+    const timeoutMillis = this.reindexingTimeout ? 3000 : 0
+    this.connection.console.info(`Scheduling reindexing in ${timeoutMillis} ms`)
+    this.reindexingTimeout = setTimeout(() => {
+      this.reindex(settings)
         .then(() => {
           if (textDocument.uri.match(/\.feature$/)) {
             this.validateGherkinDocument(textDocument)
           }
         })
-        .catch((err) => this.connection.console.error(`Failed to update settings: ${err.message}`))
+        .catch((err) => this.connection.console.error(`Failed to reindex: ${err.message}`))
     }, timeoutMillis)
   }
 
@@ -228,7 +227,7 @@ export class CucumberLanguageServer {
     }
   }
 
-  private async updateSettings(settings: Settings) {
+  private async reindex(settings: Settings) {
     // TODO: Send WorkDoneProgressBegin notification
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
 
@@ -240,7 +239,7 @@ export class CucumberLanguageServer {
     await this.connection.console.info(
       `Built ${stepDocuments.length} step documents for auto complete`
     )
-    this.index = jsSearchIndex(stepDocuments)
+    this.searchIndex = jsSearchIndex(stepDocuments)
 
     // TODO: Send WorkDoneProgressEnd notification
   }
