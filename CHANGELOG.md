@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2022-01-19
+
 ### Added
-- Added settings (with reasonable defaults) so the client can specify where the source 
+- Added settings (with reasonable defaults) so the client can specify where the source
   code is. The server uses this for auto complete and detecting defined steps.
 
 ### Fixed
@@ -45,7 +47,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.4.0...HEAD
+[0.3.3]: https://github.com/cucumber/language-server/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/cucumber/language-server/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/cucumber/language-server/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/cucumber/language-server/compare/v0.3.0...v0.3.1
