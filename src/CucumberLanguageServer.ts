@@ -84,6 +84,8 @@ export class CucumberLanguageServer {
 
       if (params.capabilities.textDocument?.semanticTokens) {
         connection.languages.semanticTokens.on((semanticTokenParams) => {
+          connection.console.info(`semanticTokens params: ${JSON.stringify(semanticTokenParams)}`)
+
           const doc = documents.get(semanticTokenParams.textDocument.uri)
           if (!doc) return { data: [] }
           const gherkinSource = doc.getText()
@@ -95,7 +97,12 @@ export class CucumberLanguageServer {
 
       if (params.capabilities.textDocument?.completion?.completionItem?.snippetSupport) {
         connection.onCompletion((params) => {
+          connection.console.info(
+            `onCompletion params: ${JSON.stringify(params)}, indexed: ${!!this.index}`
+          )
+
           if (!this.searchIndex) return []
+
           const doc = documents.get(params.textDocument.uri)
           if (!doc) return []
           const gherkinSource = doc.getText()
@@ -109,6 +116,8 @@ export class CucumberLanguageServer {
 
       if (params.capabilities.textDocument?.formatting) {
         connection.onDocumentFormatting((params) => {
+          connection.console.info(`onDocumentFormatting params: ${JSON.stringify(params)}`)
+
           const doc = documents.get(params.textDocument.uri)
           if (!doc) return []
           const gherkinSource = doc.getText()
