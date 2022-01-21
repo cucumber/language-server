@@ -98,7 +98,7 @@ export class CucumberLanguageServer {
       if (params.capabilities.textDocument?.completion?.completionItem?.snippetSupport) {
         connection.onCompletion((params) => {
           connection.console.info(
-            `onCompletion params: ${JSON.stringify(params)}, indexed: ${!!this.index}`
+            `onCompletion params: ${JSON.stringify(params)}, indexed: ${!!this.searchIndex}`
           )
 
           if (!this.searchIndex) return []
