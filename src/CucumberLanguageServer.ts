@@ -49,7 +49,9 @@ export class CucumberLanguageServer {
     private readonly documents: TextDocuments<TextDocument>
   ) {
     connection.onInitialize(async (params) => {
-      connection.console.info('CucumberLanguageServer initializing...')
+      connection.console.info(
+        `CucumberLanguageServer initializing with params: ${JSON.stringify(params, null, 2)}`
+      )
 
       await this.expressionBuilder.init({
         // Relative to dist/src/cjs
