@@ -85,8 +85,26 @@ export class CucumberLanguageServer {
       }
 
       if (params.capabilities.textDocument?.semanticTokens) {
+        connection.languages.semanticTokens.onDelta((semanticTokenParams) => {
+          connection.console.info(
+            `semanticTokens.onDelta params: ${JSON.stringify(semanticTokenParams)}`
+          )
+          return {
+            data: [],
+          }
+        })
+        connection.languages.semanticTokens.onRange((semanticTokenParams) => {
+          connection.console.info(
+            `semanticTokens.onRange params: ${JSON.stringify(semanticTokenParams)}`
+          )
+          return {
+            data: [],
+          }
+        })
         connection.languages.semanticTokens.on((semanticTokenParams) => {
-          connection.console.info(`semanticTokens params: ${JSON.stringify(semanticTokenParams)}`)
+          connection.console.info(
+            `semanticTokens.on params: ${JSON.stringify(semanticTokenParams)}`
+          )
 
           const doc = documents.get(semanticTokenParams.textDocument.uri)
           if (!doc) return { data: [] }
@@ -175,6 +193,7 @@ export class CucumberLanguageServer {
         },
       },
       semanticTokensProvider: {
+        range: false,
         full: {
           delta: false,
         },
