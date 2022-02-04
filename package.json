@@ -79,7 +79,7 @@
   "dependencies": {
     "@cucumber/cucumber-expressions": "^15.0.1",
     "@cucumber/gherkin-utils": "^7.0.0",
-    "@cucumber/language-service": "^0.11.0",
+    "@cucumber/language-service": "^0.12.0",
     "fast-glob": "3.2.11",
     "source-map-support": "0.5.21",
     "tree-sitter-cli": "0.20.4",
