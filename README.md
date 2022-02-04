@@ -24,17 +24,13 @@ The server expects settings in the following format:
 features: ['src/test/**/*.feature', 'features/**/*.feature'],
 glue: ['src/test/**/*.java', 'features/**/*.ts'],
 
-| setting          | default                                              |
-| ---------------- | ---------------------------------------------------- |
-| `features`       | `['src/test/**/*.feature', 'features/**/*.feature']` |
-| `glue`           | `['src/test/**/*.java', 'features/**/*.ts']`         |
-| `parameterTypes` | `[]`                                                 |
+| setting          | default                                              | example                                      |
+| ---------------- | ---------------------------------------------------- | -------------------------------------------- |
+| `features`       | `['src/test/**/*.feature', 'features/**/*.feature']` | (see default)                                |
+| `glue`           | `['src/test/**/*.java', 'features/**/*.ts']`         | (see default)                                |
+| `parameterTypes` | `[]`                                                 | `[{ name: 'actor', regexp: '[A-Z][a-z]+' }]` |
 
 The `parameterTypes` setting can be used to define [Custom Parameter Types](https://github.com/cucumber/cucumber-expressions#custom-parameter-types)
 that are not directly visible in the source code. For example, if you're using the `actor` parameter type from
 [@cucumber/screenplay](https://github.com/cucumber/screenplay.js#actors) you'll have to
-declare this in the `parameterTypes` setting:
-
-```typescript
-;[{ name: 'actor', regexp: '[A-Z][a-z]+' }]
-```
+declare this in the `parameterTypes` setting.

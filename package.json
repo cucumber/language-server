@@ -15,9 +15,6 @@
     ".": {
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
-    },
-    "./bin/cucumber-language-server.cjs": {
-      "require": "./bin/cucumber-language-server.cjs"
     }
   },
   "bin": {

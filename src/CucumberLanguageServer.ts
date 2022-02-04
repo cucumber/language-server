@@ -51,10 +51,6 @@ export class CucumberLanguageServer {
     wasmUrls: WasmUrls
   ) {
     connection.onInitialize(async (params) => {
-      connection.console.info(
-        `CucumberLanguageServer initializing with params: ${JSON.stringify(params, null, 2)}`
-      )
-
       await this.expressionBuilder.init(wasmUrls)
 
       if (params.capabilities.workspace?.configuration) {
