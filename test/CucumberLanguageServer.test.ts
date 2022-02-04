@@ -1,3 +1,4 @@
+import { WasmUrls } from '@cucumber/language-service'
 import assert from 'assert'
 import { Duplex } from 'stream'
 import { Logger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node'
@@ -24,6 +25,11 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { CucumberLanguageServer } from '../src/CucumberLanguageServer.js'
 import { Settings } from '../src/types'
+
+const wasmUrls: WasmUrls = {
+  java: `node_modules/@cucumber/language-service/tree-sitter-java.wasm`,
+  typescript: `node_modules/@cucumber/language-service/tree-sitter-typescript.wasm`,
+}
 
 describe('CucumberLanguageServer', () => {
   let inputStream: Duplex
@@ -53,7 +59,7 @@ describe('CucumberLanguageServer', () => {
     serverConnection = createConnection(inputStream, outputStream)
     documents = new TextDocuments(TextDocument)
 
-    new CucumberLanguageServer(serverConnection, documents)
+    new CucumberLanguageServer(serverConnection, documents, wasmUrls)
     serverConnection.listen()
 
     const initializeParams: InitializeParams = {
