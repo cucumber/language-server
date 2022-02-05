@@ -1,8 +1,9 @@
+import { LanguageName, Source } from '@cucumber/language-service'
 import fg from 'fast-glob'
 import fs from 'fs/promises'
 import path from 'path'
 
-import { Extension, LanguageName, Source } from './tree-sitter/types.js'
+type Extension = '.ts' | '.java'
 
 export const languageByExt: Record<Extension, LanguageName> = {
   '.ts': 'typescript',

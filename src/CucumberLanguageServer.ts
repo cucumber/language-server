@@ -9,7 +9,9 @@ import {
   jsSearchIndex,
   semanticTokenTypes,
   StepDocument,
+  WasmUrls,
 } from '@cucumber/language-service'
+import { ExpressionBuilder } from '@cucumber/language-service'
 import {
   ConfigurationRequest,
   Connection,
@@ -22,7 +24,6 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { buildStepTexts } from './buildStepTexts.js'
 import { loadAll } from './loadAll.js'
-import { ExpressionBuilder } from './tree-sitter/ExpressionBuilder.js'
 import { ParameterTypeMeta, Settings } from './types.js'
 import { version } from './version.js'
 
@@ -46,18 +47,11 @@ export class CucumberLanguageServer {
 
   constructor(
     private readonly connection: Connection,
-    private readonly documents: TextDocuments<TextDocument>
+    private readonly documents: TextDocuments<TextDocument>,
+    wasmUrls: WasmUrls
   ) {
     connection.onInitialize(async (params) => {
-      connection.console.info(
-        `CucumberLanguageServer initializing with params: ${JSON.stringify(params, null, 2)}`
-      )
-
-      await this.expressionBuilder.init({
-        // Relative to dist/src/cjs
-        java: `${__dirname}/../../../tree-sitter-java.wasm`,
-        typescript: `${__dirname}/../../../tree-sitter-typescript.wasm`,
-      })
+      await this.expressionBuilder.init(wasmUrls)
 
       if (params.capabilities.workspace?.configuration) {
         connection.onDidChangeConfiguration((params) => {

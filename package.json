@@ -7,8 +7,7 @@
   "types": "dist/cjs/src/index.d.ts",
   "files": [
     "dist/cjs",
-    "dist/esm",
-    "*.wasm"
+    "dist/esm"
   ],
   "module": "dist/esm/src/index.js",
   "jsnext:main": "dist/esm/src/index.js",
@@ -16,9 +15,6 @@
     ".": {
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
-    },
-    "./bin/cucumber-language-server.cjs": {
-      "require": "./bin/cucumber-language-server.cjs"
     }
   },
   "bin": {
@@ -35,8 +31,6 @@
     "eslint-fix": "eslint --ext ts,tsx --max-warnings 0 --fix src test",
     "eslint": "eslint --ext ts,tsx --max-warnings 0 src test",
     "upgrade": "npm-check-updates --upgrade",
-    "build-java-wasm": "npx tree-sitter build-wasm node_modules/tree-sitter-java",
-    "build-typescript-wasm": "npx tree-sitter build-wasm node_modules/tree-sitter-typescript/typescript",
     "prepare": "husky install",
     "pretty-quick-staged": "pretty-quick --staged"
   },
@@ -57,7 +51,7 @@
   "devDependencies": {
     "@cucumber/cucumber": "7.3.2",
     "@types/mocha": "9.1.0",
-    "@types/node": "17.0.10",
+    "@types/node": "17.0.15",
     "@typescript-eslint/eslint-plugin": "5.10.2",
     "@typescript-eslint/parser": "5.10.2",
     "eslint": "8.8.0",
@@ -79,14 +73,10 @@
   "dependencies": {
     "@cucumber/cucumber-expressions": "^15.0.1",
     "@cucumber/gherkin-utils": "^7.0.0",
-    "@cucumber/language-service": "^0.12.0",
+    "@cucumber/language-service": "^0.12.1",
     "fast-glob": "3.2.11",
     "source-map-support": "0.5.21",
-    "tree-sitter-cli": "0.20.4",
-    "tree-sitter-java": "0.19.1",
-    "tree-sitter-typescript": "0.19.0",
     "vscode-languageserver": "7.0.0",
-    "vscode-languageserver-textdocument": "1.0.4",
-    "web-tree-sitter": "0.20.3"
+    "vscode-languageserver-textdocument": "1.0.4"
   }
 }
