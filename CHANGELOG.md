@@ -7,14 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2022-02-05
+
+### Changed
+- Moved tree-sitter logic to language-service [#28](https://github.com/cucumber/language-server/issues/28)
+
 ### Fixed
 - Do not crash anymore when cucumber settings are missing
 
 ## [0.4.0] - 2022-01-19
-
 ### Added
 - Added settings (with reasonable defaults) so the client can specify where the source
-  code is. The server uses this for auto complete and detecting defined steps.
+code is. The server uses this for auto complete and detecting defined steps.
 
 ### Fixed
 - Fixed auto complete by re-enabling the building of the index that backs it.
@@ -50,8 +54,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.4.0...HEAD
-[0.3.3]: https://github.com/cucumber/language-server/compare/v0.3.3...v0.4.0
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/cucumber/language-server/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/cucumber/language-server/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/cucumber/language-server/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/cucumber/language-server/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/cucumber/language-server/compare/v0.3.0...v0.3.1
