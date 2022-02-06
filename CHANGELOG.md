@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Fix server immediately crashing when starting.
+
 ## [0.5.0] - 2022-02-05
 
 ### Changed
