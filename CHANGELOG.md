@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.1] - 2022-02-11
 ### Fixed
-- Fix server immediately crashing when starting.
+- Fix server immediately crashing when starting [#30](https://github.com/cucumber/language-server/pull/30)
 
 ## [0.5.0] - 2022-02-05
-
 ### Changed
 - Moved tree-sitter logic to language-service [#28](https://github.com/cucumber/language-server/issues/28)
 
@@ -57,7 +57,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/cucumber/language-server/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/cucumber/language-server/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/cucumber/language-server/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/cucumber/language-server/compare/v0.3.2...v0.3.3
