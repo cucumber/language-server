@@ -7,9 +7,9 @@ import {
   getGherkinSemanticTokens,
   Index,
   jsSearchIndex,
+  NodeParserAdapter,
   semanticTokenTypes,
   StepDocument,
-  WasmUrls,
 } from '@cucumber/language-service'
 import { ExpressionBuilder } from '@cucumber/language-service'
 import {
@@ -42,17 +42,14 @@ const defaultSettings: Settings = {
 export class CucumberLanguageServer {
   private expressions: readonly Expression[] = []
   private searchIndex: Index
-  private expressionBuilder = new ExpressionBuilder()
+  private expressionBuilder = new ExpressionBuilder(new NodeParserAdapter())
   private reindexingTimeout: NodeJS.Timeout
 
   constructor(
     private readonly connection: Connection,
-    private readonly documents: TextDocuments<TextDocument>,
-    wasmUrls: WasmUrls
+    private readonly documents: TextDocuments<TextDocument>
   ) {
     connection.onInitialize(async (params) => {
-      await this.expressionBuilder.init(wasmUrls)
-
       if (params.capabilities.workspace?.configuration) {
         connection.onDidChangeConfiguration((params) => {
           this.reindex(<Settings>params.settings).catch((err) => {
@@ -271,7 +268,7 @@ export class CucumberLanguageServer {
   private async buildStepDocuments(
     gherkinGlobs: readonly string[],
     glueGlobs: readonly string[],
-    parameterTypes: readonly ParameterTypeMeta[] | undefined
+    parameterTypes: readonly ParameterTypeMeta[]
   ): Promise<readonly StepDocument[]> {
     const gherkinSources = await loadAll(gherkinGlobs)
     await this.connection.console.info(`Found ${gherkinSources.length} feature file(s)`)
