@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Use tree-sitter Node.js bindings instead of web (WASM) bindings.
+- Updated to `@cucumber/language-service 0.13.0`
+
+### Removed
+- Support for Node.js 17 removed - see [tree-sitter/tree-sitter#1503](https://github.com/tree-sitter/tree-sitter/issues/1503)
+
 ## [0.5.1] - 2022-02-11
 ### Fixed
 - Fix server immediately crashing when starting [#30](https://github.com/cucumber/language-server/pull/30)

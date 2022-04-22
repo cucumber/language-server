@@ -1,15 +1,15 @@
-import { Expression } from '@cucumber/cucumber-expressions'
+import { Expression, ParameterTypeRegistry } from '@cucumber/cucumber-expressions'
 import {
-  buildStepDocuments,
+  buildSuggestions,
   getGherkinCompletionItems,
   getGherkinDiagnostics,
   getGherkinFormattingEdits,
   getGherkinSemanticTokens,
   Index,
   jsSearchIndex,
+  NodeParserAdapter,
   semanticTokenTypes,
-  StepDocument,
-  WasmUrls,
+  Suggestion,
 } from '@cucumber/language-service'
 import { ExpressionBuilder } from '@cucumber/language-service'
 import {
@@ -42,17 +42,14 @@ const defaultSettings: Settings = {
 export class CucumberLanguageServer {
   private expressions: readonly Expression[] = []
   private searchIndex: Index
-  private expressionBuilder = new ExpressionBuilder()
+  private expressionBuilder = new ExpressionBuilder(new NodeParserAdapter())
   private reindexingTimeout: NodeJS.Timeout
 
   constructor(
     private readonly connection: Connection,
-    private readonly documents: TextDocuments<TextDocument>,
-    wasmUrls: WasmUrls
+    private readonly documents: TextDocuments<TextDocument>
   ) {
     connection.onInitialize(async (params) => {
-      await this.expressionBuilder.init(wasmUrls)
-
       if (params.capabilities.workspace?.configuration) {
         connection.onDidChangeConfiguration((params) => {
           this.reindex(<Settings>params.settings).catch((err) => {
@@ -255,7 +252,7 @@ export class CucumberLanguageServer {
     // TODO: Send WorkDoneProgressBegin notification
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
 
-    const stepDocuments = await this.buildStepDocuments(
+    const stepDocuments = await this.buildSuggestions(
       settings.features,
       settings.glue,
       settings.parameterTypes
@@ -268,11 +265,11 @@ export class CucumberLanguageServer {
     // TODO: Send WorkDoneProgressEnd notification
   }
 
-  private async buildStepDocuments(
+  private async buildSuggestions(
     gherkinGlobs: readonly string[],
     glueGlobs: readonly string[],
-    parameterTypes: readonly ParameterTypeMeta[] | undefined
-  ): Promise<readonly StepDocument[]> {
+    parameterTypes: readonly ParameterTypeMeta[]
+  ): Promise<readonly Suggestion[]> {
     const gherkinSources = await loadAll(gherkinGlobs)
     await this.connection.console.info(`Found ${gherkinSources.length} feature file(s)`)
     const stepTexts = gherkinSources.reduce<readonly string[]>(
@@ -286,7 +283,8 @@ export class CucumberLanguageServer {
     await this.connection.console.info(
       `Found ${this.expressions.length} step definitions in those glue files`
     )
-    return buildStepDocuments(stepTexts, this.expressions)
+    const registry = new ParameterTypeRegistry()
+    return buildSuggestions(registry, stepTexts, this.expressions)
   }
 }
 
