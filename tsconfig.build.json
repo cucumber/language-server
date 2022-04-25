@@ -6,10 +6,8 @@
     "declarationMap": true,
     "sourceMap": true,
     "rootDir": ".",
-    "noEmit": false
+    "noEmit": false,
+    "lib": ["ES2019"]
   },
-  "include": [
-    "src",
-    "test"
-  ],
+  "include": ["src", "test"]
 }
