@@ -1,3 +1,4 @@
+import { NodeParserAdapter } from '@cucumber/language-service/node'
 import assert from 'assert'
 import { Duplex } from 'stream'
 import { Logger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node'
@@ -53,7 +54,7 @@ describe('CucumberLanguageServer', () => {
     serverConnection = createConnection(inputStream, outputStream)
     documents = new TextDocuments(TextDocument)
 
-    new CucumberLanguageServer(serverConnection, documents)
+    new CucumberLanguageServer(new NodeParserAdapter(), serverConnection, documents)
     serverConnection.listen()
 
     const initializeParams: InitializeParams = {

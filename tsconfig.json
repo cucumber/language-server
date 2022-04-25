@@ -12,14 +12,10 @@
     "strictNullChecks": true,
     "experimentalDecorators": true,
     "module": "ESNext",
-    "lib": [
-      "ES6",
-      "dom"
-    ],
+    "lib": ["ES6", "dom"],
     "target": "ES6",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "noEmit": true,
-    "jsx": "react"
+    "noEmit": true
   }
 }

@@ -4,19 +4,18 @@
   "description": "Cucumber Language Server",
   "type": "module",
   "main": "dist/cjs/src/index.js",
-  "types": "dist/cjs/src/index.d.ts",
-  "files": [
-    "dist/cjs",
-    "dist/esm"
-  ],
   "module": "dist/esm/src/index.js",
-  "jsnext:main": "dist/esm/src/index.js",
+  "types": "dist/esm/src/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
     }
   },
+  "files": [
+    "dist/cjs/src",
+    "dist/esm/src"
+  ],
   "bin": {
     "cucumber-language-server": "bin/cucumber-language-server.cjs"
   },
@@ -78,7 +77,7 @@
   "dependencies": {
     "@cucumber/cucumber-expressions": "^15.1.1",
     "@cucumber/gherkin-utils": "^7.0.0",
-    "@cucumber/language-service": "^0.13.0",
+    "@cucumber/language-service": "^0.14.4",
     "fast-glob": "3.2.11",
     "source-map-support": "0.5.21",
     "vscode-languageserver": "7.0.0",
