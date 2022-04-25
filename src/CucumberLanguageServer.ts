@@ -7,7 +7,7 @@ import {
   getGherkinSemanticTokens,
   Index,
   jsSearchIndex,
-  NodeParserAdapter,
+  ParserAdapter,
   semanticTokenTypes,
   Suggestion,
 } from '@cucumber/language-service'
@@ -40,15 +40,17 @@ const defaultSettings: Settings = {
 }
 
 export class CucumberLanguageServer {
-  private expressions: readonly Expression[] = []
+  private readonly expressionBuilder
   private searchIndex: Index
-  private expressionBuilder = new ExpressionBuilder(new NodeParserAdapter())
+  private expressions: readonly Expression[] = []
   private reindexingTimeout: NodeJS.Timeout
 
   constructor(
+    private parserAdapter: ParserAdapter,
     private readonly connection: Connection,
     private readonly documents: TextDocuments<TextDocument>
   ) {
+    this.expressionBuilder = new ExpressionBuilder(parserAdapter)
     connection.onInitialize(async (params) => {
       if (params.capabilities.workspace?.configuration) {
         connection.onDidChangeConfiguration((params) => {
