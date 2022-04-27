@@ -1,6 +1,7 @@
 import { Expression, ParameterTypeRegistry } from '@cucumber/cucumber-expressions'
 import {
   buildSuggestions,
+  ExpressionBuilder,
   getGherkinCompletionItems,
   getGherkinDiagnostics,
   getGherkinFormattingEdits,
@@ -11,7 +12,6 @@ import {
   semanticTokenTypes,
   Suggestion,
 } from '@cucumber/language-service'
-import { ExpressionBuilder } from '@cucumber/language-service'
 import {
   ConfigurationRequest,
   Connection,
@@ -40,18 +40,20 @@ const defaultSettings: Settings = {
 }
 
 export class CucumberLanguageServer {
-  private readonly expressionBuilder
+  private readonly expressionBuilder: ExpressionBuilder
   private searchIndex: Index
   private expressions: readonly Expression[] = []
   private reindexingTimeout: NodeJS.Timeout
 
   constructor(
-    private parserAdapter: ParserAdapter,
     private readonly connection: Connection,
-    private readonly documents: TextDocuments<TextDocument>
+    private readonly documents: TextDocuments<TextDocument>,
+    parserAdapter: ParserAdapter
   ) {
     this.expressionBuilder = new ExpressionBuilder(parserAdapter)
     connection.onInitialize(async (params) => {
+      await parserAdapter.init()
+
       if (params.capabilities.workspace?.configuration) {
         connection.onDidChangeConfiguration((params) => {
           this.reindex(<Settings>params.settings).catch((err) => {

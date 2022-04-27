@@ -3,11 +3,13 @@ import fg from 'fast-glob'
 import fs from 'fs/promises'
 import path from 'path'
 
-type Extension = '.ts' | '.java'
+type Extension = '.ts' | '.java' | '.cs' | '.php'
 
 export const languageByExt: Record<Extension, LanguageName> = {
   '.ts': 'typescript',
   '.java': 'java',
+  '.cs': 'c_sharp',
+  '.php': 'php',
 }
 
 const extensions = Array.from(Object.keys(languageByExt)).concat('.feature')

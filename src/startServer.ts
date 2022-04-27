@@ -8,7 +8,7 @@ import { CucumberLanguageServer } from './CucumberLanguageServer.js'
 export function startServer(adapter: ParserAdapter) {
   const connection = createConnection(ProposedFeatures.all)
   const documents = new TextDocuments(TextDocument)
-  new CucumberLanguageServer(adapter, connection, documents)
+  new CucumberLanguageServer(connection, documents, adapter)
   connection.listen()
 
   // Don't die on unhandled Promise rejections
