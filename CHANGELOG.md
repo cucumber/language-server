@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Support for C#
+- Support for PHP
+
+### Changed
+- Remove external dependency on `@cucumber/language-service` - always use tree-sitter wasm
+
 ## [0.6.0] - 2022-04-26
 ### Changed
 - Use tree-sitter Node.js bindings instead of web (WASM) bindings.

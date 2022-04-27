@@ -54,7 +54,7 @@ describe('CucumberLanguageServer', () => {
     serverConnection = createConnection(inputStream, outputStream)
     documents = new TextDocuments(TextDocument)
 
-    new CucumberLanguageServer(new NodeParserAdapter(), serverConnection, documents)
+    new CucumberLanguageServer(serverConnection, documents, new NodeParserAdapter())
     serverConnection.listen()
 
     const initializeParams: InitializeParams = {
