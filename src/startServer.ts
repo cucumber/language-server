@@ -1,8 +1,8 @@
+import { ParserAdapter } from '@cucumber/language-service'
 import { TextDocuments } from 'vscode-languageserver'
 import { createConnection, ProposedFeatures } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
-import { ParserAdapter } from '../../language-service'
 import { CucumberLanguageServer } from './CucumberLanguageServer.js'
 
 export function startServer(adapter: ParserAdapter) {
