@@ -60,7 +60,7 @@
   },
   "homepage": "https://github.com/cucumber/language-server#readme",
   "devDependencies": {
-    "@cucumber/cucumber": "8.1.2",
+    "@cucumber/cucumber": "8.2.0",
     "@types/mocha": "9.1.1",
     "@types/node": "17.0.29",
     "@typescript-eslint/eslint-plugin": "5.22.0",
