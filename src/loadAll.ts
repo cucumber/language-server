@@ -3,20 +3,22 @@ import fg from 'fast-glob'
 import fs from 'fs/promises'
 import path from 'path'
 
-type Extension = '.ts' | '.java' | '.cs' | '.php'
-
-export const languageByExt: Record<Extension, LanguageName> = {
-  '.ts': 'typescript',
-  '.java': 'java',
-  '.cs': 'c_sharp',
-  '.php': 'php',
+export const extByLanguage: Record<LanguageName, string> = {
+  typescript: '.ts',
+  java: '.java',
+  c_sharp: '.cs',
+  php: '.php',
+  ruby: '.rb',
 }
 
-const extensions = Array.from(Object.keys(languageByExt)).concat('.feature')
+const languageByExt = Object.fromEntries<LanguageName>(
+  Object.entries(extByLanguage).map(([language, ext]) => [ext, language as LanguageName])
+)
+const extensions = Array.from(Object.values(extByLanguage)).concat('.feature')
 
 export async function loadAll(globs: readonly string[]): Promise<readonly Source[]> {
   const filePromises = globs.reduce<readonly Promise<string[]>[]>((prev, glob) => {
-    return prev.concat(fg(glob))
+    return prev.concat(fg(glob, { caseSensitiveMatch: false }))
   }, [])
   const fileArrays = await Promise.all(filePromises)
 
@@ -27,7 +29,7 @@ export async function loadAll(globs: readonly string[]): Promise<readonly Source
       .map<Promise<Source>>(
         (file) =>
           new Promise<Source>((resolve) => {
-            const language = languageByExt[path.extname(file) as Extension]
+            const language = languageByExt[path.extname(file)]
             return fs.readFile(file, 'utf-8').then((content) =>
               resolve({
                 language,

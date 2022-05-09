@@ -32,10 +32,18 @@ type ServerInfo = {
   version: string
 }
 
-// In order to allow 0-config in LSP clients we provide default settings
+// In order to allow 0-config in LSP clients we provide default settings.
+// This should be consistent with the `README.md` in `cucumber/vscode` - this is to
+// ensure the docs for the plugin reflect the defaults.
 const defaultSettings: Settings = {
   features: ['src/test/**/*.feature', 'features/**/*.feature'],
-  glue: ['src/test/**/*.java', 'features/**/*.ts'],
+  glue: [
+    'src/test/**/*.java',
+    'features/**/*.ts',
+    'features/**/*.php',
+    'features/**/*.rb',
+    '*specs*/**/.cs',
+  ],
   parameterTypes: [],
 }
 
@@ -121,7 +129,11 @@ export class CucumberLanguageServer {
           const doc = documents.get(params.textDocument.uri)
           if (!doc) return []
           const gherkinSource = doc.getText()
-          return getGherkinCompletionItems(gherkinSource, params.position.line, this.searchIndex)
+          return getGherkinCompletionItems(
+            gherkinSource,
+            params.position.line,
+            this.searchIndex
+          ).slice()
         })
 
         connection.onCompletionResolve((item) => item)

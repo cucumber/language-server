@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Support for Ruby
+
 ## [0.7.1] - 2022-05-05
 ### Fixed
 - Autocomplete for unmatched step definitions

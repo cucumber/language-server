@@ -3,8 +3,6 @@ import assert from 'assert'
 import { Duplex } from 'stream'
 import { Logger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node'
 import {
-  CompletionItem,
-  CompletionItemKind,
   Connection,
   createProtocolConnection,
   DidChangeConfigurationNotification,
@@ -22,6 +20,7 @@ import {
   CompletionRequest,
 } from 'vscode-languageserver-protocol/lib/common/protocol'
 import { TextDocument } from 'vscode-languageserver-textdocument'
+import { CompletionItem, CompletionItemKind } from 'vscode-languageserver-types'
 
 import { CucumberLanguageServer } from '../src/CucumberLanguageServer.js'
 import { Settings } from '../src/types'
@@ -149,6 +148,7 @@ describe('CucumberLanguageServer', () => {
           label: 'I have {int} cukes',
           insertTextFormat: InsertTextFormat.Snippet,
           kind: CompletionItemKind.Text,
+          labelDetails: {},
           textEdit: {
             newText: 'I have ${1|5,8|} cukes',
             range: {
