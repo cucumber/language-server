@@ -21,8 +21,10 @@ provide them.
 The server retrieves `cucumber.*` settings from the client with a [workspace/configuration](https://microsoft.github.io/language-server-protocol/specification#workspace_configuration) request.
 The server expects settings in the following format:
 
+```
 features: ['src/test/**/*.feature', 'features/**/*.feature'],
 glue: ['src/test/**/*.java', 'features/**/*.ts'],
+```
 
 | setting          | default                                              | example                                      |
 | ---------------- | ---------------------------------------------------- | -------------------------------------------- |
