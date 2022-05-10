@@ -146,6 +146,8 @@ describe('CucumberLanguageServer', () => {
       const expected: CompletionItem[] = [
         {
           label: 'I have {int} cukes',
+          filterText: 'I have',
+          sortText: '1000',
           insertTextFormat: InsertTextFormat.Snippet,
           kind: CompletionItemKind.Text,
           labelDetails: {},

@@ -129,11 +129,7 @@ export class CucumberLanguageServer {
           const doc = documents.get(params.textDocument.uri)
           if (!doc) return []
           const gherkinSource = doc.getText()
-          return getGherkinCompletionItems(
-            gherkinSource,
-            params.position.line,
-            this.searchIndex
-          ).slice()
+          return getGherkinCompletionItems(gherkinSource, params.position, this.searchIndex).slice()
         })
 
         connection.onCompletionResolve((item) => item)
