@@ -1,7 +1,7 @@
 import { LanguageName, Source } from '@cucumber/language-service'
 import fg from 'fast-glob'
 import fs from 'fs/promises'
-import path from 'path'
+import { extname } from 'path'
 
 export const extByLanguage: Record<LanguageName, string> = {
   typescript: '.ts',
@@ -24,16 +24,17 @@ export async function loadAll(globs: readonly string[]): Promise<readonly Source
 
   return Promise.all(
     fileArrays
-      .flatMap((files) => files)
-      .filter((file) => extensions.includes(path.extname(file)))
+      .flatMap((paths) => paths)
+      .filter((path) => extensions.includes(extname(path)))
       .map<Promise<Source>>(
-        (file) =>
+        (path) =>
           new Promise<Source>((resolve) => {
-            const language = languageByExt[path.extname(file)]
-            return fs.readFile(file, 'utf-8').then((content) =>
+            const language = languageByExt[extname(path)]
+            return fs.readFile(path, 'utf-8').then((content) =>
               resolve({
                 language,
                 content,
+                path,
               })
             )
           })

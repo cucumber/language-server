@@ -1,6 +1,6 @@
 {
   "name": "@cucumber/language-server",
-  "version": "0.8.2",
+  "version": "0.9.0",
   "description": "Cucumber Language Server",
   "type": "module",
   "main": "dist/cjs/src/node/startNodeServer.js",
@@ -62,7 +62,7 @@
   "devDependencies": {
     "@cucumber/cucumber": "8.2.0",
     "@types/mocha": "9.1.1",
-    "@types/node": "17.0.31",
+    "@types/node": "17.0.32",
     "@typescript-eslint/eslint-plugin": "5.23.0",
     "@typescript-eslint/parser": "5.23.0",
     "eslint": "8.15.0",
@@ -79,15 +79,15 @@
     "ts-node": "10.7.0",
     "typescript": "4.6.4",
     "vscode-jsonrpc": "8.0.0",
-    "vscode-languageserver-protocol": "3.16.0"
+    "vscode-languageserver-protocol": "3.17.0"
   },
   "dependencies": {
     "@cucumber/cucumber-expressions": "^15.1.1",
     "@cucumber/gherkin-utils": "^7.0.0",
-    "@cucumber/language-service": "^0.18.1",
+    "@cucumber/language-service": "^0.19.0",
     "fast-glob": "3.2.11",
     "source-map-support": "0.5.21",
-    "vscode-languageserver": "7.0.0",
+    "vscode-languageserver": "8.0.0",
     "vscode-languageserver-textdocument": "1.0.4",
     "vscode-languageserver-types": "3.17.0"
   }

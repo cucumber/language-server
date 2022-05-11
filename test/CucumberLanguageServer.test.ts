@@ -120,16 +120,16 @@ describe('CucumberLanguageServer', () => {
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
       // Create a document for auto completion
-      // @ts-ignore
-      documents._documents['testdoc'] = TextDocument.create(
-        'testdoc',
-        'gherkin',
-        1,
-        `Feature: Hello
+      documents.get = () =>
+        TextDocument.create(
+          'testdoc',
+          'gherkin',
+          1,
+          `Feature: Hello
   Scenario: World
     Given I have
     `
-      )
+        )
       const completionParams: CompletionParams = {
         textDocument: {
           uri: 'testdoc',

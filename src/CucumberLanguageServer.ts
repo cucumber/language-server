@@ -1,7 +1,8 @@
-import { Expression, ParameterTypeRegistry } from '@cucumber/cucumber-expressions'
+import { ParameterTypeRegistry } from '@cucumber/cucumber-expressions'
 import {
   buildSuggestions,
   ExpressionBuilder,
+  ExpressionBuilderResult,
   getGherkinCompletionItems,
   getGherkinDiagnostics,
   getGherkinFormattingEdits,
@@ -50,7 +51,7 @@ const defaultSettings: Settings = {
 export class CucumberLanguageServer {
   private readonly expressionBuilder: ExpressionBuilder
   private searchIndex: Index
-  private expressions: readonly Expression[] = []
+  private expressionBuilderResult: ExpressionBuilderResult = { expressions: [], errors: [] }
   private reindexingTimeout: NodeJS.Timeout
 
   constructor(
@@ -65,7 +66,7 @@ export class CucumberLanguageServer {
       if (params.capabilities.workspace?.configuration) {
         connection.onDidChangeConfiguration((params) => {
           this.reindex(<Settings>params.settings).catch((err) => {
-            connection.console.error(`Failed to reindex: ${err.message}`)
+            connection.console.error(`Failed to reindex: ${err.stack}`)
           })
         })
         try {
@@ -112,7 +113,7 @@ export class CucumberLanguageServer {
           const doc = documents.get(semanticTokenParams.textDocument.uri)
           if (!doc) return { data: [] }
           const gherkinSource = doc.getText()
-          return getGherkinSemanticTokens(gherkinSource, this.expressions)
+          return getGherkinSemanticTokens(gherkinSource, this.expressionBuilderResult.expressions)
         })
       } else {
         connection.console.info('semanticTokens is disabled')
@@ -217,7 +218,10 @@ export class CucumberLanguageServer {
   }
 
   private validateGherkinDocument(textDocument: TextDocument): void {
-    const diagnostics = getGherkinDiagnostics(textDocument.getText(), this.expressions)
+    const diagnostics = getGherkinDiagnostics(
+      textDocument.getText(),
+      this.expressionBuilderResult.expressions
+    )
     this.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
   }
 
@@ -291,12 +295,15 @@ export class CucumberLanguageServer {
     await this.connection.console.info(`Found ${stepTexts.length} steps in those feature files`)
     const glueSources = await loadAll(glueGlobs)
     await this.connection.console.info(`Found ${glueSources.length} glue file(s)`)
-    this.expressions = this.expressionBuilder.build(glueSources, parameterTypes)
+    this.expressionBuilderResult = this.expressionBuilder.build(glueSources, parameterTypes)
     await this.connection.console.info(
-      `Found ${this.expressions.length} step definitions in those glue files`
+      `Found ${this.expressionBuilderResult.expressions.length} step definitions in those glue files`
     )
+    for (const error of this.expressionBuilderResult.errors) {
+      await this.connection.console.error(`Errors: ${error.message}`)
+    }
     const registry = new ParameterTypeRegistry()
-    return buildSuggestions(registry, stepTexts, this.expressions)
+    return buildSuggestions(registry, stepTexts, this.expressionBuilderResult.expressions)
   }
 }
 
