@@ -24,7 +24,7 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { buildStepTexts } from './buildStepTexts.js'
-import { loadAll } from './loadAll.js'
+import { loadGherkinSources, loadGlueSources } from './fs.js'
 import { ParameterTypeMeta, Settings } from './types.js'
 import { version } from './version.js'
 
@@ -286,14 +286,14 @@ export class CucumberLanguageServer {
     glueGlobs: readonly string[],
     parameterTypes: readonly ParameterTypeMeta[]
   ): Promise<readonly Suggestion[]> {
-    const gherkinSources = await loadAll(gherkinGlobs)
+    const gherkinSources = await loadGherkinSources(gherkinGlobs)
     await this.connection.console.info(`Found ${gherkinSources.length} feature file(s)`)
     const stepTexts = gherkinSources.reduce<readonly string[]>(
       (prev, gherkinSource) => prev.concat(buildStepTexts(gherkinSource.content)),
       []
     )
     await this.connection.console.info(`Found ${stepTexts.length} steps in those feature files`)
-    const glueSources = await loadAll(glueGlobs)
+    const glueSources = await loadGlueSources(glueGlobs)
     await this.connection.console.info(`Found ${glueSources.length} glue file(s)`)
     this.expressionBuilderResult = this.expressionBuilder.build(glueSources, parameterTypes)
     await this.connection.console.info(

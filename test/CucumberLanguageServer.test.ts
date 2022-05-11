@@ -132,7 +132,7 @@ describe('CucumberLanguageServer', () => {
         )
       const completionParams: CompletionParams = {
         textDocument: {
-          uri: 'testdoc',
+          uri: 'features/test.feature',
         },
         position: {
           line: 2, // The step line
