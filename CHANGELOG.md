@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.10.0] - 2022-05-12
 ### Fixed
 - Parse files correctly if the user has spefied globs without extensions.
 
@@ -96,7 +97,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/cucumber/language-server/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/cucumber/language-server/compare/v0.8.2...v0.9.0
 [0.8.2]: https://github.com/cucumber/language-server/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/cucumber/language-server/compare/v0.8.0...v0.8.1
