@@ -1,6 +1,6 @@
 {
   "name": "@cucumber/language-server",
-  "version": "0.10.3",
+  "version": "0.10.4",
   "description": "Cucumber Language Server",
   "type": "module",
   "main": "dist/cjs/src/node/startNodeServer.js",
