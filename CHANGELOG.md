@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Don't error when a parameter type is already registered
+
 ## [0.10.3] - 2022-05-12
 ### Fixed
 - Tell client to refresh semantic tokens after a reindex
