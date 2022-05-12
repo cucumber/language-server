@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Tell client to refresh semantic tokens after a reindex
+
 ## [0.10.2] - 2022-05-12
 ### Fixed
 - Automatically update all Gherkin documents when glue changes

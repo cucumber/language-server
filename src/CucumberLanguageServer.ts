@@ -278,6 +278,8 @@ export class CucumberLanguageServer {
         )
       )
     )
+    // Tell the client to update all semantic tokens
+    this.connection.languages.semanticTokens.refresh()
 
     const registry = new ParameterTypeRegistry()
     const suggestions = buildSuggestions(
