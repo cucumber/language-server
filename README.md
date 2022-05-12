@@ -11,7 +11,7 @@ It may also be used to power other LSP editors.
 
 ## Supported features
 
-See [Cucumber Language Service](https://github.com/cucumber/language-service)
+See [Cucumber Language Service](https://github.com/cucumber/language-service).
 
 ### Settings
 
