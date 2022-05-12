@@ -300,7 +300,7 @@ export class CucumberLanguageServer {
       `Found ${this.expressionBuilderResult.expressions.length} step definitions in those glue files`
     )
     for (const error of this.expressionBuilderResult.errors) {
-      await this.connection.console.error(`Errors: ${error.message}`)
+      await this.connection.console.error(`Error: ${error.message}`)
     }
     const registry = new ParameterTypeRegistry()
     return buildSuggestions(registry, stepTexts, this.expressionBuilderResult.expressions)
