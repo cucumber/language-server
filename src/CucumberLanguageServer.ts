@@ -169,7 +169,7 @@ export class CucumberLanguageServer {
     // when the text document is first opened or when its content has changed.
     documents.onDidChangeContent(async (change) => {
       if (change.document.uri.match(/\.feature$/)) {
-        this.validateGherkinDocument(change.document)
+        await this.validateGherkinDocument(change.document)
       }
       const settings = await this.getSettings()
       if (settings) {
@@ -179,7 +179,7 @@ export class CucumberLanguageServer {
       }
 
       if (change.document.uri.match(/\.feature$/)) {
-        this.validateGherkinDocument(change.document)
+        await this.validateGherkinDocument(change.document)
       }
     })
   }
@@ -217,12 +217,12 @@ export class CucumberLanguageServer {
     }
   }
 
-  private validateGherkinDocument(textDocument: TextDocument): void {
+  private async validateGherkinDocument(textDocument: TextDocument): Promise<void> {
     const diagnostics = getGherkinDiagnostics(
       textDocument.getText(),
       this.expressionBuilderResult.expressions
     )
-    this.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
+    await this.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
   }
 
   private scheduleReindexing(settings: Settings, textDocument: TextDocument) {
@@ -234,7 +234,9 @@ export class CucumberLanguageServer {
       this.reindex(settings)
         .then(() => {
           if (textDocument.uri.match(/\.feature$/)) {
-            this.validateGherkinDocument(textDocument)
+            this.validateGherkinDocument(textDocument).catch((err) =>
+              this.connection.console.error(`Failed to validate Gherkin document: ${err.message}`)
+            )
           }
         })
         .catch((err) => this.connection.console.error(`Failed to reindex: ${err.message}`))
@@ -251,7 +253,7 @@ export class CucumberLanguageServer {
         ],
       })
       if (config && config.length === 1) {
-        const settings: Settings | null = config[0]
+        const settings: Partial<Settings> | null = config[0]
 
         return {
           features: getArray(settings?.features, defaultSettings.features),
