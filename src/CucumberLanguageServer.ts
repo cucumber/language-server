@@ -11,7 +11,6 @@ import {
   jsSearchIndex,
   ParserAdapter,
   semanticTokenTypes,
-  Suggestion,
 } from '@cucumber/language-service'
 import {
   ConfigurationRequest,
@@ -25,7 +24,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { buildStepTexts } from './buildStepTexts.js'
 import { loadGherkinSources, loadGlueSources } from './fs.js'
-import { ParameterTypeMeta, Settings } from './types.js'
+import { Settings } from './types.js'
 import { version } from './version.js'
 
 type ServerInfo = {
@@ -89,27 +88,17 @@ export class CucumberLanguageServer {
       }
 
       if (params.capabilities.textDocument?.semanticTokens) {
-        connection.languages.semanticTokens.onDelta((semanticTokenParams) => {
-          connection.console.info(
-            `semanticTokens.onDelta params: ${JSON.stringify(semanticTokenParams)}`
-          )
+        connection.languages.semanticTokens.onDelta(() => {
           return {
             data: [],
           }
         })
-        connection.languages.semanticTokens.onRange((semanticTokenParams) => {
-          connection.console.info(
-            `semanticTokens.onRange params: ${JSON.stringify(semanticTokenParams)}`
-          )
+        connection.languages.semanticTokens.onRange(() => {
           return {
             data: [],
           }
         })
         connection.languages.semanticTokens.on((semanticTokenParams) => {
-          connection.console.info(
-            `semanticTokens.on params: ${JSON.stringify(semanticTokenParams)}`
-          )
-
           const doc = documents.get(semanticTokenParams.textDocument.uri)
           if (!doc) return { data: [] }
           const gherkinSource = doc.getText()
@@ -140,8 +129,6 @@ export class CucumberLanguageServer {
 
       if (params.capabilities.textDocument?.formatting) {
         connection.onDocumentFormatting((params) => {
-          connection.console.info(`onDocumentFormatting params: ${JSON.stringify(params)}`)
-
           const doc = documents.get(params.textDocument.uri)
           if (!doc) return []
           const gherkinSource = doc.getText()
@@ -168,18 +155,15 @@ export class CucumberLanguageServer {
     // The content of a text document has changed. This event is emitted
     // when the text document is first opened or when its content has changed.
     documents.onDidChangeContent(async (change) => {
-      if (change.document.uri.match(/\.feature$/)) {
-        await this.validateGherkinDocument(change.document)
-      }
       const settings = await this.getSettings()
       if (settings) {
-        this.scheduleReindexing(settings, change.document)
+        this.scheduleReindexing(settings)
       } else {
-        await this.connection.console.error('Could not get cucumber.* settings')
+        this.connection.console.error('Could not get cucumber.* settings')
       }
 
       if (change.document.uri.match(/\.feature$/)) {
-        await this.validateGherkinDocument(change.document)
+        await this.sendDiagnostics(change.document)
       }
     })
   }
@@ -217,7 +201,7 @@ export class CucumberLanguageServer {
     }
   }
 
-  private async validateGherkinDocument(textDocument: TextDocument): Promise<void> {
+  private async sendDiagnostics(textDocument: TextDocument): Promise<void> {
     const diagnostics = getGherkinDiagnostics(
       textDocument.getText(),
       this.expressionBuilderResult.expressions
@@ -225,21 +209,15 @@ export class CucumberLanguageServer {
     await this.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
   }
 
-  private scheduleReindexing(settings: Settings, textDocument: TextDocument) {
+  private scheduleReindexing(settings: Settings) {
     clearTimeout(this.reindexingTimeout)
     // Update index immediately the first time
     const timeoutMillis = this.reindexingTimeout ? 3000 : 0
     this.connection.console.info(`Scheduling reindexing in ${timeoutMillis} ms`)
     this.reindexingTimeout = setTimeout(() => {
-      this.reindex(settings)
-        .then(() => {
-          if (textDocument.uri.match(/\.feature$/)) {
-            this.validateGherkinDocument(textDocument).catch((err) =>
-              this.connection.console.error(`Failed to validate Gherkin document: ${err.message}`)
-            )
-          }
-        })
-        .catch((err) => this.connection.console.error(`Failed to reindex: ${err.message}`))
+      this.reindex(settings).catch((err) =>
+        this.connection.console.error(`Failed to reindex: ${err.message}`)
+      )
     }, timeoutMillis)
   }
 
@@ -270,42 +248,47 @@ export class CucumberLanguageServer {
     // TODO: Send WorkDoneProgressBegin notification
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
 
-    const stepDocuments = await this.buildSuggestions(
-      settings.features,
-      settings.glue,
-      settings.parameterTypes
-    )
-    await this.connection.console.info(
-      `Built ${stepDocuments.length} step documents for auto complete`
-    )
-    this.searchIndex = jsSearchIndex(stepDocuments)
-
-    // TODO: Send WorkDoneProgressEnd notification
-  }
-
-  private async buildSuggestions(
-    gherkinGlobs: readonly string[],
-    glueGlobs: readonly string[],
-    parameterTypes: readonly ParameterTypeMeta[]
-  ): Promise<readonly Suggestion[]> {
-    const gherkinSources = await loadGherkinSources(gherkinGlobs)
-    await this.connection.console.info(`Found ${gherkinSources.length} feature file(s)`)
+    this.connection.console.info(`Reindexing...`)
+    const gherkinSources = await loadGherkinSources(settings.features)
+    this.connection.console.info(`* Found ${gherkinSources.length} feature file(s)`)
     const stepTexts = gherkinSources.reduce<readonly string[]>(
       (prev, gherkinSource) => prev.concat(buildStepTexts(gherkinSource.content)),
       []
     )
-    await this.connection.console.info(`Found ${stepTexts.length} steps in those feature files`)
-    const glueSources = await loadGlueSources(glueGlobs)
-    await this.connection.console.info(`Found ${glueSources.length} glue file(s)`)
-    this.expressionBuilderResult = this.expressionBuilder.build(glueSources, parameterTypes)
-    await this.connection.console.info(
-      `Found ${this.expressionBuilderResult.expressions.length} step definitions in those glue files`
+    this.connection.console.info(`* Found ${stepTexts.length} steps in those feature files`)
+    const glueSources = await loadGlueSources(settings.glue)
+    this.connection.console.info(`* Found ${glueSources.length} glue file(s)`)
+    this.expressionBuilderResult = this.expressionBuilder.build(
+      glueSources,
+      settings.parameterTypes
+    )
+    this.connection.console.info(
+      `* Found ${this.expressionBuilderResult.expressions.length} step definitions in those glue files`
     )
     for (const error of this.expressionBuilderResult.errors) {
-      await this.connection.console.error(`Error: ${error.message}`)
+      this.connection.console.error(`* Step Definition errors: ${error.message}`)
     }
+
+    // Send diagnostics for all documents now that we're updated
+    const gherkinDocuments = this.documents.all().filter((doc) => doc.uri.match(/\.feature$/))
+    await Promise.all(
+      gherkinDocuments.map((doc) =>
+        this.sendDiagnostics(doc).catch((err) =>
+          this.connection.console.error(`Error: ${err.message}`)
+        )
+      )
+    )
+
     const registry = new ParameterTypeRegistry()
-    return buildSuggestions(registry, stepTexts, this.expressionBuilderResult.expressions)
+    const suggestions = buildSuggestions(
+      registry,
+      stepTexts,
+      this.expressionBuilderResult.expressions
+    )
+    this.connection.console.info(`* Built ${suggestions.length} suggestions for auto complete`)
+    this.searchIndex = jsSearchIndex(suggestions)
+
+    // TODO: Send WorkDoneProgressEnd notification
   }
 }
 

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Automatically update all Gherkin documents when glue changes
+
 ## [0.10.1] - 2022-05-12
 ### Fixed
 - Don't error if a step def expression fails to parse.
