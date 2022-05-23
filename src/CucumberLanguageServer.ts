@@ -7,6 +7,7 @@ import {
   getGherkinDiagnostics,
   getGherkinFormattingEdits,
   getGherkinSemanticTokens,
+  getStepDefinitionLocationLinks,
   Index,
   jsSearchIndex,
   ParserAdapter,
@@ -50,7 +51,7 @@ const defaultSettings: Settings = {
 export class CucumberLanguageServer {
   private readonly expressionBuilder: ExpressionBuilder
   private searchIndex: Index
-  private expressionBuilderResult: ExpressionBuilderResult = { expressions: [], errors: [] }
+  private expressionBuilderResult: ExpressionBuilderResult = { expressionLinks: [], errors: [] }
   private reindexingTimeout: NodeJS.Timeout
 
   constructor(
@@ -102,7 +103,10 @@ export class CucumberLanguageServer {
           const doc = documents.get(semanticTokenParams.textDocument.uri)
           if (!doc) return { data: [] }
           const gherkinSource = doc.getText()
-          return getGherkinSemanticTokens(gherkinSource, this.expressionBuilderResult.expressions)
+          return getGherkinSemanticTokens(
+            gherkinSource,
+            this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
+          )
         })
       } else {
         connection.console.info('semanticTokens is disabled')
@@ -136,6 +140,21 @@ export class CucumberLanguageServer {
         })
       } else {
         connection.console.info('onDocumentFormatting is disabled')
+      }
+
+      if (params.capabilities.textDocument?.definition) {
+        connection.onDefinition((params) => {
+          const doc = documents.get(params.textDocument.uri)
+          if (!doc) return []
+          const gherkinSource = doc.getText()
+          return getStepDefinitionLocationLinks(
+            gherkinSource,
+            params.position,
+            this.expressionBuilderResult.expressionLinks
+          )
+        })
+      } else {
+        connection.console.info('onDefinition is disabled')
       }
 
       connection.console.info('CucumberLanguageServer initialized!')
@@ -191,6 +210,7 @@ export class CucumberLanguageServer {
         },
       },
       documentFormattingProvider: true,
+      definitionProvider: true,
     }
   }
 
@@ -204,7 +224,7 @@ export class CucumberLanguageServer {
   private async sendDiagnostics(textDocument: TextDocument): Promise<void> {
     const diagnostics = getGherkinDiagnostics(
       textDocument.getText(),
-      this.expressionBuilderResult.expressions
+      this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
     )
     await this.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
   }
@@ -263,7 +283,7 @@ export class CucumberLanguageServer {
       settings.parameterTypes
     )
     this.connection.console.info(
-      `* Found ${this.expressionBuilderResult.expressions.length} step definitions in those glue files`
+      `* Found ${this.expressionBuilderResult.expressionLinks.length} step definitions in those glue files`
     )
     for (const error of this.expressionBuilderResult.errors) {
       this.connection.console.error(`* Step Definition errors: ${error.message}`)
@@ -285,7 +305,7 @@ export class CucumberLanguageServer {
     const suggestions = buildSuggestions(
       registry,
       stepTexts,
-      this.expressionBuilderResult.expressions
+      this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
     )
     this.connection.console.info(`* Built ${suggestions.length} suggestions for auto complete`)
     this.searchIndex = jsSearchIndex(suggestions)
