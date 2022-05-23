@@ -144,8 +144,6 @@ export class CucumberLanguageServer {
 
       if (params.capabilities.textDocument?.definition) {
         connection.onDefinition((params) => {
-          connection.console.info(`onDefinition params: ${JSON.stringify(params)}`)
-
           const doc = documents.get(params.textDocument.uri)
           if (!doc) return []
           const gherkinSource = doc.getText()
