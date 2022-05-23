@@ -3,6 +3,7 @@ import {
   buildSuggestions,
   ExpressionBuilder,
   ExpressionBuilderResult,
+  getGenerateSnippetCodeActions,
   getGherkinCompletionItems,
   getGherkinDiagnostics,
   getGherkinFormattingEdits,
@@ -12,7 +13,9 @@ import {
   ParserAdapter,
   semanticTokenTypes,
 } from '@cucumber/language-service'
+import { join } from 'path'
 import {
+  CodeActionKind,
   ConfigurationRequest,
   Connection,
   DidChangeConfigurationNotification,
@@ -50,8 +53,13 @@ const defaultSettings: Settings = {
 export class CucumberLanguageServer {
   private readonly expressionBuilder: ExpressionBuilder
   private searchIndex: Index
-  private expressionBuilderResult: ExpressionBuilderResult = { expressions: [], errors: [] }
+  private expressionBuilderResult: ExpressionBuilderResult = {
+    expressions: [],
+    errors: [],
+    registry: new ParameterTypeRegistry(),
+  }
   private reindexingTimeout: NodeJS.Timeout
+  private folder: string
 
   constructor(
     private readonly connection: Connection,
@@ -61,6 +69,10 @@ export class CucumberLanguageServer {
     this.expressionBuilder = new ExpressionBuilder(parserAdapter)
     connection.onInitialize(async (params) => {
       await parserAdapter.init()
+
+      if (params.workspaceFolders && params.workspaceFolders.length > 0) {
+        this.folder = params.workspaceFolders[0].uri
+      }
 
       if (params.capabilities.workspace?.configuration) {
         connection.onDidChangeConfiguration((params) => {
@@ -138,6 +150,25 @@ export class CucumberLanguageServer {
         connection.console.info('onDocumentFormatting is disabled')
       }
 
+      if (params.capabilities.textDocument?.codeAction) {
+        connection.onCodeAction((params) => {
+          const diagnostics = params.context.diagnostics
+          if (this.folder) {
+            const uri = join(this.folder, 'features/steps.ts')
+            return getGenerateSnippetCodeActions(
+              diagnostics,
+              uri,
+              '',
+              'typescript',
+              this.expressionBuilderResult.registry
+            )
+          }
+          return []
+        })
+      } else {
+        connection.console.info('onCodeAction is disabled')
+      }
+
       connection.console.info('CucumberLanguageServer initialized!')
 
       return {
@@ -173,6 +204,11 @@ export class CucumberLanguageServer {
       textDocumentSync: TextDocumentSyncKind.Incremental,
       completionProvider: {
         resolveProvider: false,
+      },
+      codeActionProvider: {
+        resolveProvider: false,
+        workDoneProgress: false,
+        codeActionKinds: [CodeActionKind.QuickFix],
       },
       workspace: {
         workspaceFolders: {
