@@ -7,6 +7,7 @@ import {
   getGherkinDiagnostics,
   getGherkinFormattingEdits,
   getGherkinSemanticTokens,
+  getStepDefinitionLocationLinks,
   Index,
   jsSearchIndex,
   ParserAdapter,
@@ -138,6 +139,19 @@ export class CucumberLanguageServer {
         connection.console.info('onDocumentFormatting is disabled')
       }
 
+      if (params.capabilities.textDocument?.definition) {
+        connection.onDefinition((params) => {
+          connection.console.info(`onDefinition params: ${JSON.stringify(params)}`)
+
+          const doc = documents.get(params.textDocument.uri)
+          if (!doc) return []
+          const gherkinSource = doc.getText()
+          return getStepDefinitionLocationLinks(gherkinSource, params.position)
+        })
+      } else {
+        connection.console.info('onDefinition is disabled')
+      }
+
       connection.console.info('CucumberLanguageServer initialized!')
 
       return {
@@ -191,6 +205,7 @@ export class CucumberLanguageServer {
         },
       },
       documentFormattingProvider: true,
+      definitionProvider: true,
     }
   }
 
