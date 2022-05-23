@@ -26,11 +26,9 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 import { buildStepTexts } from './buildStepTexts.js'
 import { loadGherkinSources, loadGlueSources } from './fs.js'
 import { Settings } from './types.js'
-import { version } from './version.js'
 
 type ServerInfo = {
   name: string
-  version: string
 }
 
 // In order to allow 0-config in LSP clients we provide default settings.
@@ -217,7 +215,6 @@ export class CucumberLanguageServer {
   public info(): ServerInfo {
     return {
       name: 'Cucumber Language Server',
-      version,
     }
   }
 
