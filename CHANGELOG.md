@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Add Go To Step Definition (`textDocument/definition`) ([#46](https://github.com/cucumber/language-server/pull/46))
+
 ## [0.10.4] - 2022-05-12
 ### Fixed
 - Don't error when a parameter type is already registered
