@@ -56,10 +56,10 @@ async function loadSources<L>(
       .map<Promise<Source<L>>>(
         (path) =>
           new Promise<Source<L>>((resolve) => {
-            const language = languageNameByExt[extname(path)]
+            const languageName = languageNameByExt[extname(path)]
             return fs.readFile(path, 'utf-8').then((content) =>
               resolve({
-                language,
+                languageName,
                 content,
                 path,
               })

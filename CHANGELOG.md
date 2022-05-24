@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed a bug with snippet generation
+
 ## [0.12.0] - 2022-05-24
 ### Added
 - Add Generate Step Definition (`textDocument/codeAction`) ([#45](https://github.com/cucumber/language-server/pull/45))
