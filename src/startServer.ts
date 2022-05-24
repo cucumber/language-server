@@ -4,6 +4,7 @@ import { createConnection, ProposedFeatures } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { CucumberLanguageServer } from './CucumberLanguageServer.js'
+import { version } from './version.js'
 
 export function startServer(adapter: ParserAdapter) {
   const connection = createConnection(ProposedFeatures.all)
@@ -14,7 +15,7 @@ export function startServer(adapter: ParserAdapter) {
   // Don't die on unhandled Promise rejections
   process.on('unhandledRejection', (reason, p) => {
     connection.console.error(
-      `CucumberLanguageServer: Unhandled Rejection at promise: ${p}, reason: ${reason}`
+      `Cucumber Language Server ${version}: Unhandled Rejection at promise: ${p}, reason: ${reason}`
     )
   })
 }

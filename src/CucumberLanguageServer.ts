@@ -60,7 +60,7 @@ const defaultSettings: Settings = {
 export class CucumberLanguageServer {
   private readonly expressionBuilder: ExpressionBuilder
   private searchIndex: Index
-  private expressionBuilderResult: ExpressionBuilderResult
+  private expressionBuilderResult: ExpressionBuilderResult | undefined = undefined
   private reindexingTimeout: NodeJS.Timeout
   private folderUri: string
 
@@ -76,7 +76,6 @@ export class CucumberLanguageServer {
       if (params.workspaceFolders && params.workspaceFolders.length > 0) {
         this.folderUri = params.workspaceFolders[0].uri
       }
-      await this.reindex()
 
       if (params.capabilities.workspace?.configuration) {
         connection.onDidChangeConfiguration((params) => {
@@ -119,7 +118,7 @@ export class CucumberLanguageServer {
           const gherkinSource = doc.getText()
           return getGherkinSemanticTokens(
             gherkinSource,
-            this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
+            (this.expressionBuilderResult?.expressionLinks || []).map((l) => l.expression)
           )
         })
       } else {
@@ -159,7 +158,7 @@ export class CucumberLanguageServer {
       if (params.capabilities.textDocument?.codeAction) {
         connection.onCodeAction(async (params) => {
           const diagnostics = params.context.diagnostics
-          if (this.folderUri) {
+          if (this.folderUri && this.expressionBuilderResult) {
             const settings = await this.getSettings()
             const links = getStepDefinitionSnippetLinks(
               this.expressionBuilderResult.expressionLinks.map((l) => l.locationLink)
@@ -215,7 +214,7 @@ export class CucumberLanguageServer {
       if (params.capabilities.textDocument?.definition) {
         connection.onDefinition((params) => {
           const doc = documents.get(params.textDocument.uri)
-          if (!doc) return []
+          if (!doc || !this.expressionBuilderResult) return []
           const gherkinSource = doc.getText()
           return getStepDefinitionLocationLinks(
             gherkinSource,
@@ -235,6 +234,7 @@ export class CucumberLanguageServer {
 
     connection.onInitialized(() => {
       connection.console.info(`${this.info().name} ${this.info().version} initialized`)
+      this.reindex().catch((err) => connection.console.error(err.message))
     })
 
     documents.listen(connection)
@@ -291,7 +291,7 @@ export class CucumberLanguageServer {
   private async sendDiagnostics(textDocument: TextDocument): Promise<void> {
     const diagnostics = getGherkinDiagnostics(
       textDocument.getText(),
-      this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
+      (this.expressionBuilderResult?.expressionLinks || []).map((l) => l.expression)
     )
     await this.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
   }
@@ -329,12 +329,12 @@ export class CucumberLanguageServer {
         this.connection.console.error(
           `The client responded with a config we cannot process: ${JSON.stringify(config, null, 2)}`
         )
-        this.connection.console.error(`Using default settings: ${defaultSettings}`)
+        this.connection.console.error(`Using default settings`)
         return defaultSettings
       }
     } catch (err) {
       this.connection.console.error(`Failed to request configuration: ${err.message}`)
-      this.connection.console.error(`Using default settings: ${defaultSettings}`)
+      this.connection.console.error(`Using default settings`)
       return defaultSettings
     }
   }
