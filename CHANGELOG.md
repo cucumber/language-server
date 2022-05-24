@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Add Generate Step Definition (`textDocument/codeAction`) ([#45](https://github.com/cucumber/language-server/pull/45))
+
 ## [0.11.0] - 2022-05-23
 ### Added
 - Add Go To Step Definition (`textDocument/definition`) ([#46](https://github.com/cucumber/language-server/pull/46))
