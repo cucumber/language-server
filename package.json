@@ -30,7 +30,7 @@
     "build:cjs": "tsc --build tsconfig.build-cjs.json && cp package.cjs.json dist/cjs/package.json",
     "build:esm": "tsc --build tsconfig.build-esm.json",
     "build:version": "node --eval \"console.log('export const version = \\'' + require('./package.json').version + '\\'')\" > src/version.ts",
-    "build": "npm run build:cjs && npm run build:esm",
+    "build": "npm run build:version && npm run build:cjs && npm run build:esm",
     "test": "npm run test:cjs",
     "test:cjs": "npm run build:cjs && mocha --no-config --recursive dist/cjs/test",
     "prepublishOnly": "npm run build",
@@ -82,9 +82,8 @@
     "vscode-languageserver-protocol": "3.17.1"
   },
   "dependencies": {
-    "@cucumber/cucumber-expressions": "^15.2.0",
     "@cucumber/gherkin-utils": "^7.0.0",
-    "@cucumber/language-service": "^0.22.2",
+    "@cucumber/language-service": "^0.23.0",
     "fast-glob": "3.2.11",
     "source-map-support": "0.5.21",
     "vscode-languageserver": "8.0.1",

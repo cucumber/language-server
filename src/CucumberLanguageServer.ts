@@ -1,9 +1,8 @@
-import { ParameterTypeRegistry } from '@cucumber/cucumber-expressions'
 import {
   buildSuggestions,
   ExpressionBuilder,
   ExpressionBuilderResult,
-  getGenerateSnippetCodeActions,
+  getGenerateSnippetCodeAction,
   getGherkinCompletionItems,
   getGherkinDiagnostics,
   getGherkinFormattingEdits,
@@ -15,9 +14,10 @@ import {
   semanticTokenTypes,
 } from '@cucumber/language-service'
 import { stat as statCb } from 'fs'
-import { extname } from 'path'
+import { extname, relative } from 'path'
 import { promisify } from 'util'
 import {
+  CodeAction,
   CodeActionKind,
   ConfigurationRequest,
   Connection,
@@ -30,13 +30,15 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { buildStepTexts } from './buildStepTexts.js'
 import { getLanguage, loadGherkinSources, loadGlueSources } from './fs.js'
-import { guessStepDefinitionSnippetLink } from './guessStepDefinitionSnippetLink.js'
+import { getStepDefinitionSnippetLinks } from './getStepDefinitionSnippetLinks.js'
 import { Settings } from './types.js'
+import { version } from './version.js'
 
 const stat = promisify(statCb)
 
 type ServerInfo = {
   name: string
+  version: string
 }
 
 // In order to allow 0-config in LSP clients we provide default settings.
@@ -58,12 +60,7 @@ const defaultSettings: Settings = {
 export class CucumberLanguageServer {
   private readonly expressionBuilder: ExpressionBuilder
   private searchIndex: Index
-  private expressionBuilderResult: ExpressionBuilderResult = {
-    expressionLinks: [],
-    parameterTypeLinks: [],
-    errors: [],
-    registry: new ParameterTypeRegistry(),
-  }
+  private expressionBuilderResult: ExpressionBuilderResult
   private reindexingTimeout: NodeJS.Timeout
   private folderUri: string
 
@@ -79,6 +76,7 @@ export class CucumberLanguageServer {
       if (params.workspaceFolders && params.workspaceFolders.length > 0) {
         this.folderUri = params.workspaceFolders[0].uri
       }
+      await this.reindex()
 
       if (params.capabilities.workspace?.configuration) {
         connection.onDidChangeConfiguration((params) => {
@@ -163,37 +161,50 @@ export class CucumberLanguageServer {
           const diagnostics = params.context.diagnostics
           if (this.folderUri) {
             const settings = await this.getSettings()
-            const link = await guessStepDefinitionSnippetLink(
+            const links = getStepDefinitionSnippetLinks(
               this.expressionBuilderResult.expressionLinks.map((l) => l.locationLink)
             )
-            if (!link) {
+            if (links.length === 0) {
               connection.console.info(
                 `Unable to generate step definition. Please create one first manually.`
               )
               return []
             }
-            const languageName = getLanguage(extname(link.targetUri))
-            if (!languageName) {
-              connection.console.info(
-                `Unable to generate step definition snippet for unknown extension ${link}`
+
+            const codeActions: CodeAction[] = []
+            for (const link of links) {
+              const languageName = getLanguage(extname(link.targetUri))
+              if (!languageName) {
+                connection.console.info(
+                  `Unable to generate step definition snippet for unknown extension ${link}`
+                )
+                return []
+              }
+              const mustacheTemplate = settings.snippetTemplates[languageName]
+              let createFile = false
+              try {
+                await stat(new URL(link.targetUri))
+              } catch {
+                createFile = true
+              }
+              const relativePath = relative(
+                new URL(this.folderUri).pathname,
+                new URL(link.targetUri).pathname
               )
-              return []
+              const codeAction = getGenerateSnippetCodeAction(
+                diagnostics,
+                link,
+                relativePath,
+                createFile,
+                mustacheTemplate,
+                languageName,
+                this.expressionBuilderResult.registry
+              )
+              if (codeAction) {
+                codeActions.push(codeAction)
+              }
             }
-            const mustacheTemplate = settings.snippetTemplates[languageName]
-            let createFile = false
-            try {
-              await stat(new URL(link.targetUri))
-            } catch {
-              createFile = true
-            }
-            return getGenerateSnippetCodeActions(
-              diagnostics,
-              link,
-              createFile,
-              mustacheTemplate,
-              languageName,
-              this.expressionBuilderResult.registry
-            )
+            return codeActions
           }
           return []
         })
@@ -216,8 +227,6 @@ export class CucumberLanguageServer {
         connection.console.info('onDefinition is disabled')
       }
 
-      connection.console.info('CucumberLanguageServer initialized!')
-
       return {
         capabilities: this.capabilities(),
         serverInfo: this.info(),
@@ -225,7 +234,7 @@ export class CucumberLanguageServer {
     })
 
     connection.onInitialized(() => {
-      this.connection.console.info('onInitialized')
+      connection.console.info(`${this.info().name} ${this.info().version} initialized`)
     })
 
     documents.listen(connection)
@@ -233,13 +242,7 @@ export class CucumberLanguageServer {
     // The content of a text document has changed. This event is emitted
     // when the text document is first opened or when its content has changed.
     documents.onDidChangeContent(async (change) => {
-      const settings = await this.getSettings()
-      if (settings) {
-        this.scheduleReindexing(settings)
-      } else {
-        this.connection.console.error('Could not get cucumber.* settings')
-      }
-
+      this.scheduleReindexing()
       if (change.document.uri.match(/\.feature$/)) {
         await this.sendDiagnostics(change.document)
       }
@@ -281,6 +284,7 @@ export class CucumberLanguageServer {
   public info(): ServerInfo {
     return {
       name: 'Cucumber Language Server',
+      version,
     }
   }
 
@@ -292,13 +296,12 @@ export class CucumberLanguageServer {
     await this.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
   }
 
-  private scheduleReindexing(settings: Settings) {
+  private scheduleReindexing() {
     clearTimeout(this.reindexingTimeout)
-    // Update index immediately the first time
-    const timeoutMillis = this.reindexingTimeout ? 3000 : 0
+    const timeoutMillis = 3000
     this.connection.console.info(`Scheduling reindexing in ${timeoutMillis} ms`)
     this.reindexingTimeout = setTimeout(() => {
-      this.reindex(settings).catch((err) =>
+      this.reindex().catch((err) =>
         this.connection.console.error(`Failed to reindex: ${err.message}`)
       )
     }, timeoutMillis)
@@ -336,7 +339,10 @@ export class CucumberLanguageServer {
     }
   }
 
-  private async reindex(settings: Settings) {
+  private async reindex(settings?: Settings) {
+    if (!settings) {
+      settings = await this.getSettings()
+    }
     // TODO: Send WorkDoneProgressBegin notification
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
 
@@ -380,9 +386,8 @@ export class CucumberLanguageServer {
     // Tell the client to update all semantic tokens
     this.connection.languages.semanticTokens.refresh()
 
-    const registry = new ParameterTypeRegistry()
     const suggestions = buildSuggestions(
-      registry,
+      this.expressionBuilderResult.registry,
       stepTexts,
       this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
     )
