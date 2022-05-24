@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.12.1] - 2022-05-24
 ### Fixed
 - Fixed a bug with snippet generation
 
@@ -124,7 +125,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/cucumber/language-server/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/cucumber/language-server/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/cucumber/language-server/compare/v0.10.4...v0.11.0
 [0.10.4]: https://github.com/cucumber/language-server/compare/v0.10.3...v0.10.4
