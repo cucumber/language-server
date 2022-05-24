@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - No longer throw `Failed to reindex: No parameter type named ***` for custom parameter types.
+- Fixed other concurrency bugs.
 - Let the user choose in what file to generate step definitions.
 
 ## [0.12.1] - 2022-05-24
