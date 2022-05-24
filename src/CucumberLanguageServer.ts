@@ -324,11 +324,7 @@ export class CucumberLanguageServer {
         }
       } else {
         this.connection.console.error(
-          `The client did not respons with a config we can process: ${JSON.stringify(
-            config,
-            null,
-            2
-          )}`
+          `The client responded with a config we cannot process: ${JSON.stringify(config, null, 2)}`
         )
         this.connection.console.error(`Using default settings: ${defaultSettings}`)
         return defaultSettings
