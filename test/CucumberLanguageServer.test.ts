@@ -110,6 +110,7 @@ describe('CucumberLanguageServer', () => {
         features: ['testdata/gherkin/*.feature'],
         glue: ['testdata/typescript/*.ts'],
         parameterTypes: [],
+        snippetTemplates: {},
       }
       const configParams: DidChangeConfigurationParams = {
         settings,

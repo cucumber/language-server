@@ -8,12 +8,15 @@ import {
   getGherkinDiagnostics,
   getGherkinFormattingEdits,
   getGherkinSemanticTokens,
+  getStepDefinitionLocationLinks,
   Index,
   jsSearchIndex,
   ParserAdapter,
   semanticTokenTypes,
 } from '@cucumber/language-service'
-import { join } from 'path'
+import { stat as statCb } from 'fs'
+import { extname } from 'path'
+import { promisify } from 'util'
 import {
   CodeActionKind,
   ConfigurationRequest,
@@ -26,13 +29,14 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { buildStepTexts } from './buildStepTexts.js'
-import { loadGherkinSources, loadGlueSources } from './fs.js'
+import { getLanguage, loadGherkinSources, loadGlueSources } from './fs.js'
+import { guessStepDefinitionSnippetLink } from './guessStepDefinitionSnippetLink.js'
 import { Settings } from './types.js'
-import { version } from './version.js'
+
+const stat = promisify(statCb)
 
 type ServerInfo = {
   name: string
-  version: string
 }
 
 // In order to allow 0-config in LSP clients we provide default settings.
@@ -48,18 +52,20 @@ const defaultSettings: Settings = {
     '*specs*/**/.cs',
   ],
   parameterTypes: [],
+  snippetTemplates: {},
 }
 
 export class CucumberLanguageServer {
   private readonly expressionBuilder: ExpressionBuilder
   private searchIndex: Index
   private expressionBuilderResult: ExpressionBuilderResult = {
-    expressions: [],
+    expressionLinks: [],
+    parameterTypeLinks: [],
     errors: [],
     registry: new ParameterTypeRegistry(),
   }
   private reindexingTimeout: NodeJS.Timeout
-  private folder: string
+  private folderUri: string
 
   constructor(
     private readonly connection: Connection,
@@ -71,11 +77,12 @@ export class CucumberLanguageServer {
       await parserAdapter.init()
 
       if (params.workspaceFolders && params.workspaceFolders.length > 0) {
-        this.folder = params.workspaceFolders[0].uri
+        this.folderUri = params.workspaceFolders[0].uri
       }
 
       if (params.capabilities.workspace?.configuration) {
         connection.onDidChangeConfiguration((params) => {
+          this.connection.console.info(`Client sent workspace/configuration`)
           this.reindex(<Settings>params.settings).catch((err) => {
             connection.console.error(`Failed to reindex: ${err.stack}`)
           })
@@ -83,9 +90,7 @@ export class CucumberLanguageServer {
         try {
           await connection.client.register(DidChangeConfigurationNotification.type)
         } catch (err) {
-          connection.console.info(
-            `Could not register DidChangeConfigurationNotification: "${err.message}" - this is OK`
-          )
+          connection.console.info(`Client does not support client/registerCapability. This is OK.`)
         }
       } else {
         this.connection.console.info('onDidChangeConfiguration is disabled')
@@ -114,7 +119,10 @@ export class CucumberLanguageServer {
           const doc = documents.get(semanticTokenParams.textDocument.uri)
           if (!doc) return { data: [] }
           const gherkinSource = doc.getText()
-          return getGherkinSemanticTokens(gherkinSource, this.expressionBuilderResult.expressions)
+          return getGherkinSemanticTokens(
+            gherkinSource,
+            this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
+          )
         })
       } else {
         connection.console.info('semanticTokens is disabled')
@@ -151,15 +159,39 @@ export class CucumberLanguageServer {
       }
 
       if (params.capabilities.textDocument?.codeAction) {
-        connection.onCodeAction((params) => {
+        connection.onCodeAction(async (params) => {
           const diagnostics = params.context.diagnostics
-          if (this.folder) {
-            const uri = join(this.folder, 'features/steps.ts')
+          if (this.folderUri) {
+            const settings = await this.getSettings()
+            const link = await guessStepDefinitionSnippetLink(
+              this.expressionBuilderResult.expressionLinks.map((l) => l.locationLink)
+            )
+            if (!link) {
+              connection.console.info(
+                `Unable to generate step definition. Please create one first manually.`
+              )
+              return []
+            }
+            const languageName = getLanguage(extname(link.targetUri))
+            if (!languageName) {
+              connection.console.info(
+                `Unable to generate step definition snippet for unknown extension ${link}`
+              )
+              return []
+            }
+            const mustacheTemplate = settings.snippetTemplates[languageName]
+            let createFile = false
+            try {
+              await stat(new URL(link.targetUri))
+            } catch {
+              createFile = true
+            }
             return getGenerateSnippetCodeActions(
               diagnostics,
-              uri,
-              '',
-              'typescript',
+              link,
+              createFile,
+              mustacheTemplate,
+              languageName,
               this.expressionBuilderResult.registry
             )
           }
@@ -167,6 +199,21 @@ export class CucumberLanguageServer {
         })
       } else {
         connection.console.info('onCodeAction is disabled')
+      }
+
+      if (params.capabilities.textDocument?.definition) {
+        connection.onDefinition((params) => {
+          const doc = documents.get(params.textDocument.uri)
+          if (!doc) return []
+          const gherkinSource = doc.getText()
+          return getStepDefinitionLocationLinks(
+            gherkinSource,
+            params.position,
+            this.expressionBuilderResult.expressionLinks
+          )
+        })
+      } else {
+        connection.console.info('onDefinition is disabled')
       }
 
       connection.console.info('CucumberLanguageServer initialized!')
@@ -227,20 +274,20 @@ export class CucumberLanguageServer {
         },
       },
       documentFormattingProvider: true,
+      definitionProvider: true,
     }
   }
 
   public info(): ServerInfo {
     return {
       name: 'Cucumber Language Server',
-      version,
     }
   }
 
   private async sendDiagnostics(textDocument: TextDocument): Promise<void> {
     const diagnostics = getGherkinDiagnostics(
       textDocument.getText(),
-      this.expressionBuilderResult.expressions
+      this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
     )
     await this.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
   }
@@ -257,7 +304,7 @@ export class CucumberLanguageServer {
     }, timeoutMillis)
   }
 
-  private async getSettings(): Promise<Settings | undefined> {
+  private async getSettings(): Promise<Settings> {
     try {
       const config = await this.connection.sendRequest(ConfigurationRequest.type, {
         items: [
@@ -273,10 +320,23 @@ export class CucumberLanguageServer {
           features: getArray(settings?.features, defaultSettings.features),
           glue: getArray(settings?.glue, defaultSettings.glue),
           parameterTypes: getArray(settings?.parameterTypes, defaultSettings.parameterTypes),
+          snippetTemplates: {},
         }
+      } else {
+        this.connection.console.error(
+          `The client did not respons with a config we can process: ${JSON.stringify(
+            config,
+            null,
+            2
+          )}`
+        )
+        this.connection.console.error(`Using default settings: ${defaultSettings}`)
+        return defaultSettings
       }
     } catch (err) {
-      this.connection.console.error('Failed to request configuration: ' + err.message)
+      this.connection.console.error(`Failed to request configuration: ${err.message}`)
+      this.connection.console.error(`Using default settings: ${defaultSettings}`)
+      return defaultSettings
     }
   }
 
@@ -286,20 +346,27 @@ export class CucumberLanguageServer {
 
     this.connection.console.info(`Reindexing...`)
     const gherkinSources = await loadGherkinSources(settings.features)
-    this.connection.console.info(`* Found ${gherkinSources.length} feature file(s)`)
+    this.connection.console.info(
+      `* Found ${gherkinSources.length} feature file(s) in ${JSON.stringify(settings.features)}`
+    )
     const stepTexts = gherkinSources.reduce<readonly string[]>(
       (prev, gherkinSource) => prev.concat(buildStepTexts(gherkinSource.content)),
       []
     )
     this.connection.console.info(`* Found ${stepTexts.length} steps in those feature files`)
     const glueSources = await loadGlueSources(settings.glue)
-    this.connection.console.info(`* Found ${glueSources.length} glue file(s)`)
+    this.connection.console.info(
+      `* Found ${glueSources.length} glue file(s) in ${JSON.stringify(settings.glue)}`
+    )
     this.expressionBuilderResult = this.expressionBuilder.build(
       glueSources,
       settings.parameterTypes
     )
     this.connection.console.info(
-      `* Found ${this.expressionBuilderResult.expressions.length} step definitions in those glue files`
+      `* Found ${this.expressionBuilderResult.expressionLinks.length} step definitions in those glue files`
+    )
+    this.connection.console.info(
+      `* Found ${this.expressionBuilderResult.parameterTypeLinks.length} parameter types in those glue files`
     )
     for (const error of this.expressionBuilderResult.errors) {
       this.connection.console.error(`* Step Definition errors: ${error.message}`)
@@ -321,7 +388,7 @@ export class CucumberLanguageServer {
     const suggestions = buildSuggestions(
       registry,
       stepTexts,
-      this.expressionBuilderResult.expressions
+      this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
     )
     this.connection.console.info(`* Built ${suggestions.length} suggestions for auto complete`)
     this.searchIndex = jsSearchIndex(suggestions)

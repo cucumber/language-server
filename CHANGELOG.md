@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.11.0] - 2022-05-23
+### Added
+- Add Go To Step Definition (`textDocument/definition`) ([#46](https://github.com/cucumber/language-server/pull/46))
+
 ## [0.10.4] - 2022-05-12
 ### Fixed
 - Don't error when a parameter type is already registered
@@ -113,7 +117,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.10.4...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/cucumber/language-server/compare/v0.10.4...v0.11.0
 [0.10.4]: https://github.com/cucumber/language-server/compare/v0.10.3...v0.10.4
 [0.10.3]: https://github.com/cucumber/language-server/compare/v0.10.2...v0.10.3
 [0.10.2]: https://github.com/cucumber/language-server/compare/v0.10.1...v0.10.2

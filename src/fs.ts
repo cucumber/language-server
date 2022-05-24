@@ -19,30 +19,39 @@ const glueExtensions = new Set(Object.keys(glueLanguageNameByExt))
 export async function loadGlueSources(
   globs: readonly string[]
 ): Promise<readonly Source<LanguageName>[]> {
-  return loadGlobs(globs, glueExtensions, glueLanguageNameByExt)
+  return loadSources(globs, glueExtensions, glueLanguageNameByExt)
+}
+
+export function getLanguage(ext: string): LanguageName | undefined {
+  return glueLanguageNameByExt[ext]
 }
 
 export async function loadGherkinSources(
   globs: readonly string[]
 ): Promise<readonly Source<'gherkin'>[]> {
-  return loadGlobs(globs, new Set(['.feature']), { '.feature': 'gherkin' })
+  return loadSources(globs, new Set(['.feature']), { '.feature': 'gherkin' })
 }
 
 type LanguageNameByExt<L> = Record<string, L>
 
-async function loadGlobs<L>(
+export async function findPaths(globs: readonly string[]): Promise<readonly string[]> {
+  const pathPromises = globs.reduce<readonly Promise<string[]>[]>((prev, glob) => {
+    return prev.concat(fg(glob, { caseSensitiveMatch: false, onlyFiles: true }))
+  }, [])
+  const pathArrays = await Promise.all(pathPromises)
+  const paths = pathArrays.flatMap((paths) => paths)
+  return [...new Set(paths).values()].sort()
+}
+
+async function loadSources<L>(
   globs: readonly string[],
   extensions: Set<string>,
   languageNameByExt: LanguageNameByExt<L>
 ): Promise<readonly Source<L>[]> {
-  const filePromises = globs.reduce<readonly Promise<string[]>[]>((prev, glob) => {
-    return prev.concat(fg(glob, { caseSensitiveMatch: false }))
-  }, [])
-  const fileArrays = await Promise.all(filePromises)
+  const paths = await findPaths(globs)
 
   return Promise.all(
-    fileArrays
-      .flatMap((paths) => paths)
+    paths
       .filter((path) => extensions.has(extname(path)))
       .map<Promise<Source<L>>>(
         (path) =>
