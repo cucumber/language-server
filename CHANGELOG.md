@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Upgrade to `@cucumber/language-service 0.25.0`
+
 ## [0.12.4] - 2022-05-25
 ### Fixed
 - Generate step definition now correctly uses `Given`, `When` or `Then` for undefined steps that use `And` or `But`
