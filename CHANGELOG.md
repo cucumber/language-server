@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.12.4] - 2022-05-25
 ### Fixed
 - Generate step definition now correctly uses `Given`, `When` or `Then` for undefined steps that use `And` or `But`
 - Generated C# step definitions now follow SpecFlow conventsions.
@@ -139,7 +140,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.3...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.4...HEAD
+[0.12.4]: https://github.com/cucumber/language-server/compare/v0.12.3...v0.12.4
 [0.12.3]: https://github.com/cucumber/language-server/compare/v0.12.2...v0.12.3
 [0.12.2]: https://github.com/cucumber/language-server/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/cucumber/language-server/compare/v0.12.0...v0.12.1
