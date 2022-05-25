@@ -289,6 +289,7 @@ export class CucumberLanguageServer {
   }
 
   private async sendDiagnostics(textDocument: TextDocument): Promise<void> {
+    this.connection.console.info(`Generating diagnostics`)
     const diagnostics = getGherkinDiagnostics(
       textDocument.getText(),
       (this.expressionBuilderResult?.expressionLinks || []).map((l) => l.expression)
@@ -365,10 +366,15 @@ export class CucumberLanguageServer {
       settings.parameterTypes
     )
     this.connection.console.info(
-      `* Found ${this.expressionBuilderResult.expressionLinks.length} step definitions in those glue files`
-    )
-    this.connection.console.info(
       `* Found ${this.expressionBuilderResult.parameterTypeLinks.length} parameter types in those glue files`
+    )
+    for (const parameterTypeLink of this.expressionBuilderResult.parameterTypeLinks) {
+      this.connection.console.info(
+        `  * {${parameterTypeLink.parameterType.name}} = ${parameterTypeLink.parameterType.regexpStrings}`
+      )
+    }
+    this.connection.console.info(
+      `* Found ${this.expressionBuilderResult.expressionLinks.length} step definitions in those glue files`
     )
     for (const error of this.expressionBuilderResult.errors) {
       this.connection.console.error(`* Step Definition errors: ${error.message}`)

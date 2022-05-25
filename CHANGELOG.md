@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Correctly parse Java parameter types
+
 ## [0.12.2] - 2022-05-24
 ### Fixed
 - No longer throw `Failed to reindex: No parameter type named ***` for custom parameter types.
