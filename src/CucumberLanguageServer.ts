@@ -294,7 +294,6 @@ export class CucumberLanguageServer {
   }
 
   private async sendDiagnostics(textDocument: TextDocument): Promise<void> {
-    this.connection.console.info(`Generating diagnostics`)
     const diagnostics = getGherkinDiagnostics(
       textDocument.getText(),
       (this.expressionBuilderResult?.expressionLinks || []).map((l) => l.expression)
@@ -397,13 +396,20 @@ export class CucumberLanguageServer {
     // Tell the client to update all semantic tokens
     this.connection.languages.semanticTokens.refresh()
 
-    const suggestions = buildSuggestions(
-      this.expressionBuilderResult.registry,
-      stepTexts,
-      this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
-    )
-    this.connection.console.info(`* Built ${suggestions.length} suggestions for auto complete`)
-    this.searchIndex = jsSearchIndex(suggestions)
+    try {
+      const suggestions = buildSuggestions(
+        this.expressionBuilderResult.registry,
+        stepTexts,
+        this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
+      )
+      this.connection.console.info(`* Built ${suggestions.length} suggestions for auto complete`)
+      this.searchIndex = jsSearchIndex(suggestions)
+    } catch (err) {
+      this.connection.console.error(err.stack)
+      this.connection.console.error(
+        'Please report an issue at https://github.com/cucumber/language-service/issues with the above stack trace'
+      )
+    }
 
     // TODO: Send WorkDoneProgressEnd notification
   }
