@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.12.7] - 2022-05-26
 ### Fixed
 - Improved logging
 
@@ -151,7 +152,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.6...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.7...HEAD
+[0.12.7]: https://github.com/cucumber/language-server/compare/v0.12.6...v0.12.7
 [0.12.6]: https://github.com/cucumber/language-server/compare/v0.12.5...v0.12.6
 [0.12.5]: https://github.com/cucumber/language-server/compare/v0.12.4...v0.12.5
 [0.12.4]: https://github.com/cucumber/language-server/compare/v0.12.3...v0.12.4
