@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Improved logging
+
 ## [0.12.6] - 2022-05-26
 ### Fixed
 - Don't crash on optionals following non-text or whitespace
