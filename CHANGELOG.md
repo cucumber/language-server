@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.12.8] - 2022-05-26
 ### Fixed
 - Don't throw an error when generating suggestions for RegExp.
 
@@ -155,7 +156,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.7...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.8...HEAD
+[0.12.8]: https://github.com/cucumber/language-server/compare/v0.12.7...v0.12.8
 [0.12.7]: https://github.com/cucumber/language-server/compare/v0.12.6...v0.12.7
 [0.12.6]: https://github.com/cucumber/language-server/compare/v0.12.5...v0.12.6
 [0.12.5]: https://github.com/cucumber/language-server/compare/v0.12.4...v0.12.5
