@@ -107,8 +107,8 @@ describe('CucumberLanguageServer', () => {
       // Note that *pushing* settings from the client to the server is deprecated in the LSP. We're only using it
       // here because it's easier to implement in the test.
       const settings: Settings = {
-        features: ['testdata/gherkin/*.feature'],
-        glue: ['testdata/typescript/*.ts'],
+        features: ['testdata/**/*.feature'],
+        glue: ['testdata/**/*.ts'],
         parameterTypes: [],
         snippetTemplates: {},
       }

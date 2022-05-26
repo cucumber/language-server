@@ -15,6 +15,7 @@ jobs:
         os:
           - macos-latest
           - ubuntu-latest
+          - windows-latest
         # 16.12.0 has broken ESM support
         # 17.x cannot install tree-sitter: https://github.com/tree-sitter/tree-sitter/issues/1503
         node-version: ['14.x', '16.11.x']
