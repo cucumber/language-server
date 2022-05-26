@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Don't crash on optionals following non-text or whitespace
+
 ## [0.12.5] - 2022-05-25
 ### Fixed
 - Upgrade to `@cucumber/language-service 0.25.0`
