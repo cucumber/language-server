@@ -62,7 +62,7 @@ export class CucumberLanguageServer {
   private searchIndex: Index
   private expressionBuilderResult: ExpressionBuilderResult | undefined = undefined
   private reindexingTimeout: NodeJS.Timeout
-  private folderUri: string
+  private rootPath: string
 
   constructor(
     private readonly connection: Connection,
@@ -72,10 +72,22 @@ export class CucumberLanguageServer {
     this.expressionBuilder = new ExpressionBuilder(parserAdapter)
     connection.onInitialize(async (params) => {
       await parserAdapter.init()
-
-      if (params.workspaceFolders && params.workspaceFolders.length > 0) {
-        this.folderUri = params.workspaceFolders[0].uri
+      if (params.clientInfo) {
+        connection.console.info(
+          `Initializing connection from ${params.clientInfo.name} ${params.clientInfo.version}`
+        )
+      } else {
+        connection.console.info(`Initializing connection from unknown client`)
       }
+
+      if (params.rootPath) {
+        this.rootPath = params.rootPath
+      } else if (params.workspaceFolders && params.workspaceFolders.length > 0) {
+        this.rootPath = new URL(params.workspaceFolders[0].uri).pathname
+      } else {
+        connection.console.error(`Client did not send rootPath or workspaceFolders`)
+      }
+      connection.console.info(`Root path: ${this.rootPath}`)
 
       if (params.capabilities.workspace?.configuration) {
         connection.onDidChangeConfiguration((params) => {
@@ -127,10 +139,6 @@ export class CucumberLanguageServer {
 
       if (params.capabilities.textDocument?.completion?.completionItem?.snippetSupport) {
         connection.onCompletion((params) => {
-          connection.console.info(
-            `onCompletion params: ${JSON.stringify(params)}, indexed: ${!!this.searchIndex}`
-          )
-
           if (!this.searchIndex) return []
 
           const doc = documents.get(params.textDocument.uri)
@@ -158,7 +166,7 @@ export class CucumberLanguageServer {
       if (params.capabilities.textDocument?.codeAction) {
         connection.onCodeAction(async (params) => {
           const diagnostics = params.context.diagnostics
-          if (this.folderUri && this.expressionBuilderResult) {
+          if (this.rootPath && this.expressionBuilderResult) {
             const settings = await this.getSettings()
             const links = getStepDefinitionSnippetLinks(
               this.expressionBuilderResult.expressionLinks.map((l) => l.locationLink)
@@ -186,10 +194,7 @@ export class CucumberLanguageServer {
               } catch {
                 createFile = true
               }
-              const relativePath = relative(
-                new URL(this.folderUri).pathname,
-                new URL(link.targetUri).pathname
-              )
+              const relativePath = relative(this.rootPath, new URL(link.targetUri).pathname)
               const codeAction = getGenerateSnippetCodeAction(
                 diagnostics,
                 link,
