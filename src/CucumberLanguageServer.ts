@@ -87,7 +87,9 @@ export class CucumberLanguageServer {
       } else {
         connection.console.error(`Client did not send rootPath or workspaceFolders`)
       }
-      connection.console.info(`Root path: ${this.rootPath}`)
+      // Some users have reported that the globs don't find any files. This is to debug that issue
+      connection.console.info(`Root path   : ${this.rootPath}`)
+      connection.console.info(`Current dir : ${process.cwd()}`)
 
       if (params.capabilities.workspace?.configuration) {
         connection.onDidChangeConfiguration((params) => {
