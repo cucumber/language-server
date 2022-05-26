@@ -1,4 +1,4 @@
-import { NodeParserAdapter } from '@cucumber/language-service/node'
+import { WasmParserAdapter } from '@cucumber/language-service/wasm'
 import assert from 'assert'
 import { Duplex } from 'stream'
 import { Logger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node'
@@ -53,7 +53,11 @@ describe('CucumberLanguageServer', () => {
     serverConnection = createConnection(inputStream, outputStream)
     documents = new TextDocuments(TextDocument)
 
-    new CucumberLanguageServer(serverConnection, documents, new NodeParserAdapter())
+    new CucumberLanguageServer(
+      serverConnection,
+      documents,
+      new WasmParserAdapter('node_modules/@cucumber/language-service/dist')
+    )
     serverConnection.listen()
 
     const initializeParams: InitializeParams = {
@@ -107,8 +111,8 @@ describe('CucumberLanguageServer', () => {
       // Note that *pushing* settings from the client to the server is deprecated in the LSP. We're only using it
       // here because it's easier to implement in the test.
       const settings: Settings = {
-        features: ['testdata/gherkin/*.feature'],
-        glue: ['testdata/typescript/*.ts'],
+        features: ['testdata/**/*.feature'],
+        glue: ['testdata/**/*.ts'],
         parameterTypes: [],
         snippetTemplates: {},
       }
