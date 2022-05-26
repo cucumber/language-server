@@ -1,4 +1,4 @@
-import { NodeParserAdapter } from '@cucumber/language-service/node'
+import { WasmParserAdapter } from '@cucumber/language-service/wasm'
 import assert from 'assert'
 import { Duplex } from 'stream'
 import { Logger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node'
@@ -53,7 +53,11 @@ describe('CucumberLanguageServer', () => {
     serverConnection = createConnection(inputStream, outputStream)
     documents = new TextDocuments(TextDocument)
 
-    new CucumberLanguageServer(serverConnection, documents, new NodeParserAdapter())
+    new CucumberLanguageServer(
+      serverConnection,
+      documents,
+      new WasmParserAdapter('node_modules/@cucumber/language-service/dist')
+    )
     serverConnection.listen()
 
     const initializeParams: InitializeParams = {
