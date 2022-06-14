@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.12.10] - 2022-06-14
 ### Fixed
 - Bugfixes in [@cucumber/language-service 0.30.0](https://github.com/cucumber/language-service/releases/tag/v0.30.0)
 
@@ -163,7 +164,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.9...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.10...HEAD
+[0.12.10]: https://github.com/cucumber/language-server/compare/v0.12.9...v0.12.10
 [0.12.9]: https://github.com/cucumber/language-server/compare/v0.12.8...v0.12.9
 [0.12.8]: https://github.com/cucumber/language-server/compare/v0.12.7...v0.12.8
 [0.12.7]: https://github.com/cucumber/language-server/compare/v0.12.6...v0.12.7
