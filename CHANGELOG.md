@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Bugfixes in [@cucumber/language-service 0.30.0](https://github.com/cucumber/language-service/releases/tag/v0.30.0)
+
 ## [0.12.9] - 2022-05-26
 ### Fixed
 - Log working directory in addition to root path
