@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Fixed
-- Fix invalid file URI on Windows. Fixes
+- Fix invalid file URI on Windows. [#57](https://github.com/cucumber/language-server/pull/57). Fixes
   [cucumber/vscode#78]https://github.com/cucumber/vscode/issues/78),
   [cucumber/vscode#82](https://github.com/cucumber/vscode/issues/82),
   [cucumber/language-service#82](https://github.com/cucumber/language-service/issues/70)
