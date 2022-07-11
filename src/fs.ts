@@ -2,6 +2,7 @@ import { LanguageName, Source } from '@cucumber/language-service'
 import fg from 'fast-glob'
 import fs from 'fs/promises'
 import { extname, resolve as resolvePath } from 'path'
+import url from 'url'
 
 export const glueExtByLanguageName: Record<LanguageName, string> = {
   typescript: '.ts',
@@ -61,7 +62,7 @@ async function loadSources<L>(
               resolve({
                 languageName,
                 content,
-                uri: `file://${resolvePath(path)}`,
+                uri: url.pathToFileURL(resolvePath(path)).href,
               })
             )
           })
