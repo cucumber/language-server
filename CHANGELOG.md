@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Fix invalid file URI on Windows. [#57](https://github.com/cucumber/language-server/pull/57). Fixes
+  [cucumber/vscode#78]https://github.com/cucumber/vscode/issues/78),
+  [cucumber/vscode#82](https://github.com/cucumber/vscode/issues/82),
+  [cucumber/language-service#70](https://github.com/cucumber/language-service/issues/70)
+
 ## [0.12.10] - 2022-06-14
 ### Fixed
 - Bugfixes in [@cucumber/language-service 0.30.0](https://github.com/cucumber/language-service/releases/tag/v0.30.0)
