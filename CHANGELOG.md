@@ -7,12 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.12.11] - 2022-07-14
 ### Fixed
 - Use wasm server in standalone mode. Fixes [#56](https://github.com/cucumber/language-server/issues/56)
 - Fix invalid file URI on Windows. [#57](https://github.com/cucumber/language-server/pull/57). Fixes
-  [cucumber/vscode#78]https://github.com/cucumber/vscode/issues/78),
-  [cucumber/vscode#82](https://github.com/cucumber/vscode/issues/82),
-  [cucumber/language-service#70](https://github.com/cucumber/language-service/issues/70)
+[cucumber/vscode#78]https://github.com/cucumber/vscode/issues/78),
+[cucumber/vscode#82](https://github.com/cucumber/vscode/issues/82),
+[cucumber/language-service#70](https://github.com/cucumber/language-service/issues/70)
 
 ## [0.12.10] - 2022-06-14
 ### Fixed
@@ -171,7 +172,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.10...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.11...HEAD
+[0.12.11]: https://github.com/cucumber/language-server/compare/v0.12.10...v0.12.11
 [0.12.10]: https://github.com/cucumber/language-server/compare/v0.12.9...v0.12.10
 [0.12.9]: https://github.com/cucumber/language-server/compare/v0.12.8...v0.12.9
 [0.12.8]: https://github.com/cucumber/language-server/compare/v0.12.7...v0.12.8
