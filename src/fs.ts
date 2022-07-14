@@ -10,6 +10,7 @@ export const glueExtByLanguageName: Record<LanguageName, string> = {
   c_sharp: '.cs',
   php: '.php',
   ruby: '.rb',
+  python: '.py',
 }
 
 const glueLanguageNameByExt = Object.fromEntries<LanguageName>(
