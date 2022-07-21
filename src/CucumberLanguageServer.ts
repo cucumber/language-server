@@ -50,6 +50,7 @@ const defaultSettings: Settings = {
     'src/test/**/*.java',
     'features/**/*.ts',
     'features/**/*.php',
+    'features/**/*.py',
     'features/**/*.rb',
     '*specs*/**/.cs',
   ],
@@ -300,7 +301,10 @@ export class CucumberLanguageServer {
       textDocument.getText(),
       (this.expressionBuilderResult?.expressionLinks || []).map((l) => l.expression)
     )
-    await this.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
+    await this.connection.sendDiagnostics({
+      uri: textDocument.uri,
+      diagnostics,
+    })
   }
 
   private scheduleReindexing() {
