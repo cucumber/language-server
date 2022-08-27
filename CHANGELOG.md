@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.12.12] - 2022-08-27
 ### Fixed
 - Add default values for Python [#63](https://github.com/cucumber/language-server/pull/63)
 - Bugfixes in [@cucumber/language-service 0.32.0](https://github.com/cucumber/language-service/releases/tag/v0.32.0)
@@ -177,7 +178,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.11...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.12...HEAD
+[0.12.12]: https://github.com/cucumber/language-server/compare/v0.12.11...v0.12.12
 [0.12.11]: https://github.com/cucumber/language-server/compare/v0.12.10...v0.12.11
 [0.12.10]: https://github.com/cucumber/language-server/compare/v0.12.9...v0.12.10
 [0.12.9]: https://github.com/cucumber/language-server/compare/v0.12.8...v0.12.9
