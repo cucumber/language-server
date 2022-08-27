@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Add default values for Python [#63](https://github.com/cucumber/language-server/pull/63)
+- Bugfixes in [@cucumber/language-service 0.32.0](https://github.com/cucumber/language-service/releases/tag/v0.32.0)
+
 ## [0.12.11] - 2022-07-14
 ### Fixed
 - Use wasm server in standalone mode. Fixes [#56](https://github.com/cucumber/language-server/issues/56)
@@ -14,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [cucumber/vscode#78]https://github.com/cucumber/vscode/issues/78),
 [cucumber/vscode#82](https://github.com/cucumber/vscode/issues/82),
 [cucumber/language-service#70](https://github.com/cucumber/language-service/issues/70)
+- Bugfixes in [@cucumber/language-service 0.31.0](https://github.com/cucumber/language-service/releases/tag/v0.31.0)
 
 ## [0.12.10] - 2022-06-14
 ### Fixed
