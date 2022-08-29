@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Fixed
-- Update default globs to work with Pytest-BDD conventions
+- Update default globs to work with Pytest-BDD conventions ([#64](https://github.com/cucumber/language-server/pull/64)
 
 ## [0.12.12] - 2022-08-27
 ### Fixed
