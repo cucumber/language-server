@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.12.13] - 2022-08-29
 ### Fixed
 - Update default globs to work with Pytest-BDD conventions ([#64](https://github.com/cucumber/language-server/pull/64)
 
@@ -181,7 +182,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.12...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.13...HEAD
+[0.12.13]: https://github.com/cucumber/language-server/compare/v0.12.12...v0.12.13
 [0.12.12]: https://github.com/cucumber/language-server/compare/v0.12.11...v0.12.12
 [0.12.11]: https://github.com/cucumber/language-server/compare/v0.12.10...v0.12.11
 [0.12.10]: https://github.com/cucumber/language-server/compare/v0.12.9...v0.12.10
