@@ -35,21 +35,6 @@ describe('CucumberLanguageServer', () => {
   beforeEach(async () => {
     inputStream = new TestStream()
     outputStream = new TestStream()
-    const logger = new NullLogger()
-    clientConnection = createProtocolConnection(
-      new StreamMessageReader(outputStream),
-      new StreamMessageWriter(inputStream),
-      logger
-    )
-    clientConnection.onError((err) => {
-      console.error('ERROR', err)
-    })
-    // Ignore log messages
-    clientConnection.onNotification(LogMessageNotification.type, () => undefined)
-    clientConnection.onUnhandledNotification((n) => {
-      console.error('Unhandled notification', n)
-    })
-    clientConnection.listen()
     serverConnection = createConnection(inputStream, outputStream)
     documents = new TextDocuments(TextDocument)
 
@@ -92,6 +77,21 @@ describe('CucumberLanguageServer', () => {
       },
       workspaceFolders: null,
     }
+    const logger = new NullLogger()
+    clientConnection = createProtocolConnection(
+      new StreamMessageReader(outputStream),
+      new StreamMessageWriter(inputStream),
+      logger
+    )
+    clientConnection.onError((err) => {
+      console.error('ERROR', err)
+    })
+    // Ignore log messages
+    clientConnection.onNotification(LogMessageNotification.type, () => undefined)
+    clientConnection.onUnhandledNotification((n) => {
+      console.error('Unhandled notification', n)
+    })
+    clientConnection.listen()
     const { serverInfo } = await clientConnection.sendRequest(
       InitializeRequest.type,
       initializeParams
