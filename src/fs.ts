@@ -1,7 +1,7 @@
 import { LanguageName, Source } from '@cucumber/language-service'
 import fg from 'fast-glob'
 import fs from 'fs/promises'
-import { extname, resolve as resolvePath } from 'path'
+import { extname, join, resolve as resolvePath } from 'path'
 import url from 'url'
 
 export const glueExtByLanguageName: Record<LanguageName, string> = {
@@ -19,9 +19,10 @@ const glueLanguageNameByExt = Object.fromEntries<LanguageName>(
 const glueExtensions = new Set(Object.keys(glueLanguageNameByExt))
 
 export async function loadGlueSources(
+  cwd: string,
   globs: readonly string[]
 ): Promise<readonly Source<LanguageName>[]> {
-  return loadSources(globs, glueExtensions, glueLanguageNameByExt)
+  return loadSources(cwd, globs, glueExtensions, glueLanguageNameByExt)
 }
 
 export function getLanguage(ext: string): LanguageName | undefined {
@@ -29,28 +30,30 @@ export function getLanguage(ext: string): LanguageName | undefined {
 }
 
 export async function loadGherkinSources(
+  cwd: string,
   globs: readonly string[]
 ): Promise<readonly Source<'gherkin'>[]> {
-  return loadSources(globs, new Set(['.feature']), { '.feature': 'gherkin' })
+  return loadSources(cwd, globs, new Set(['.feature']), { '.feature': 'gherkin' })
 }
 
 type LanguageNameByExt<L> = Record<string, L>
 
-export async function findPaths(globs: readonly string[]): Promise<readonly string[]> {
+export async function findPaths(cwd: string, globs: readonly string[]): Promise<readonly string[]> {
   const pathPromises = globs.reduce<readonly Promise<string[]>[]>((prev, glob) => {
-    return prev.concat(fg(glob, { caseSensitiveMatch: false, onlyFiles: true }))
+    return prev.concat(fg(glob, { caseSensitiveMatch: false, onlyFiles: true, cwd }))
   }, [])
   const pathArrays = await Promise.all(pathPromises)
   const paths = pathArrays.flatMap((paths) => paths)
-  return [...new Set(paths).values()].sort()
+  return [...new Set(paths).values()].sort().map((path) => join(cwd, path))
 }
 
 async function loadSources<L>(
+  cwd: string,
   globs: readonly string[],
   extensions: Set<string>,
   languageNameByExt: LanguageNameByExt<L>
 ): Promise<readonly Source<L>[]> {
-  const paths = await findPaths(globs)
+  const paths = await findPaths(cwd, globs)
 
   return Promise.all(
     paths

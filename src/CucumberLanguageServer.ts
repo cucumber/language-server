@@ -90,7 +90,9 @@ export class CucumberLanguageServer {
     parserAdapter: ParserAdapter
   ) {
     this.expressionBuilder = new ExpressionBuilder(parserAdapter)
+
     connection.onInitialize(async (params) => {
+      connection.console.log(`PARAMS: ${JSON.stringify(params, null, 2)}`)
       await parserAdapter.init()
       if (params.clientInfo) {
         connection.console.info(
@@ -102,10 +104,12 @@ export class CucumberLanguageServer {
 
       if (params.rootPath) {
         this.rootPath = params.rootPath
+      } else if (params.rootUri) {
+        this.rootPath = new URL(params.rootUri).pathname
       } else if (params.workspaceFolders && params.workspaceFolders.length > 0) {
         this.rootPath = new URL(params.workspaceFolders[0].uri).pathname
       } else {
-        connection.console.error(`Client did not send rootPath or workspaceFolders`)
+        connection.console.error(`Could not determine rootPath`)
       }
       // Some users have reported that the globs don't find any files. This is to debug that issue
       connection.console.info(`Root path   : ${this.rootPath}`)
@@ -376,8 +380,8 @@ export class CucumberLanguageServer {
     // TODO: Send WorkDoneProgressBegin notification
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
 
-    this.connection.console.info(`Reindexing...`)
-    const gherkinSources = await loadGherkinSources(settings.features)
+    this.connection.console.info(`Reindexing ${this.rootPath}`)
+    const gherkinSources = await loadGherkinSources(this.rootPath, settings.features)
     this.connection.console.info(
       `* Found ${gherkinSources.length} feature file(s) in ${JSON.stringify(settings.features)}`
     )
@@ -386,7 +390,7 @@ export class CucumberLanguageServer {
       []
     )
     this.connection.console.info(`* Found ${stepTexts.length} steps in those feature files`)
-    const glueSources = await loadGlueSources(settings.glue)
+    const glueSources = await loadGlueSources(this.rootPath, settings.glue)
     this.connection.console.info(
       `* Found ${glueSources.length} glue file(s) in ${JSON.stringify(settings.glue)}`
     )
