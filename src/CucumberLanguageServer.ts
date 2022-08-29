@@ -45,13 +45,32 @@ type ServerInfo = {
 // This should be consistent with the `README.md` in `cucumber/vscode` - this is to
 // ensure the docs for the plugin reflect the defaults.
 const defaultSettings: Settings = {
-  features: ['src/test/**/*.feature', 'features/**/*.feature'],
+  // IMPORTANT: If you change features or glue below, please also create a PR to update
+  // the vscode extension defaults accordingly in https://github.com/cucumber/vscode/blob/main/README.md#extension-settings
+  features: [
+    // Cucumber-JVM
+    'src/test/**/*.feature',
+    // Cucumber-Ruby, Cucumber-Js, Behat, Behave
+    'features/**/*.feature',
+    // Pytest-BDD
+    'tests/**/*.feature',
+    // SpecFlow
+    '*specs*/**/.feature',
+  ],
   glue: [
+    // Cucumber-JVM
     'src/test/**/*.java',
+    // Cucumber-Js
     'features/**/*.ts',
+    // Behave
     'features/**/*.php',
+    // Behat
     'features/**/*.py',
+    // Pytest-BDD
+    'tests/**/*.py',
+    // Cucumber-Ruby
     'features/**/*.rb',
+    // SpecFlow
     '*specs*/**/.cs',
   ],
   parameterTypes: [],
