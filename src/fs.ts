@@ -1,10 +1,11 @@
 import { LanguageName, Source } from '@cucumber/language-service'
 import fg from 'fast-glob'
-import fs from 'fs/promises'
 import { extname, join, resolve as resolvePath } from 'path'
 import url from 'url'
 
-export const glueExtByLanguageName: Record<LanguageName, string> = {
+import { Files } from './Files'
+
+const glueExtByLanguageName: Record<LanguageName, string> = {
   typescript: '.ts',
   java: '.java',
   c_sharp: '.cs',
@@ -19,10 +20,11 @@ const glueLanguageNameByExt = Object.fromEntries<LanguageName>(
 const glueExtensions = new Set(Object.keys(glueLanguageNameByExt))
 
 export async function loadGlueSources(
+  files: Files,
   cwd: string,
   globs: readonly string[]
 ): Promise<readonly Source<LanguageName>[]> {
-  return loadSources(cwd, globs, glueExtensions, glueLanguageNameByExt)
+  return loadSources(files, cwd, globs, glueExtensions, glueLanguageNameByExt)
 }
 
 export function getLanguage(ext: string): LanguageName | undefined {
@@ -30,10 +32,11 @@ export function getLanguage(ext: string): LanguageName | undefined {
 }
 
 export async function loadGherkinSources(
+  files: Files,
   cwd: string,
   globs: readonly string[]
 ): Promise<readonly Source<'gherkin'>[]> {
-  return loadSources(cwd, globs, new Set(['.feature']), { '.feature': 'gherkin' })
+  return loadSources(files, cwd, globs, new Set(['.feature']), { '.feature': 'gherkin' })
 }
 
 type LanguageNameByExt<L> = Record<string, L>
@@ -48,6 +51,7 @@ export async function findPaths(cwd: string, globs: readonly string[]): Promise<
 }
 
 async function loadSources<L>(
+  files: Files,
   cwd: string,
   globs: readonly string[],
   extensions: Set<string>,
@@ -62,7 +66,7 @@ async function loadSources<L>(
         (path) =>
           new Promise<Source<L>>((resolve) => {
             const languageName = languageNameByExt[extname(path)]
-            return fs.readFile(path, 'utf-8').then((content) =>
+            return files.readFile(path).then((content) =>
               resolve({
                 languageName,
                 content,

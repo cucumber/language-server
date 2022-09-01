@@ -14,9 +14,7 @@ import {
   semanticTokenTypes,
   Suggestion,
 } from '@cucumber/language-service'
-import { stat as statCb } from 'fs'
 import { extname, relative } from 'path'
-import { promisify } from 'util'
 import {
   CodeAction,
   CodeActionKind,
@@ -30,12 +28,11 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { buildStepTexts } from './buildStepTexts.js'
+import { Files } from './Files'
 import { getLanguage, loadGherkinSources, loadGlueSources } from './fs.js'
 import { getStepDefinitionSnippetLinks } from './getStepDefinitionSnippetLinks.js'
 import { Settings } from './types.js'
 import { version } from './version.js'
-
-const stat = promisify(statCb)
 
 type ServerInfo = {
   name: string
@@ -93,7 +90,8 @@ export class CucumberLanguageServer {
   constructor(
     private readonly connection: Connection,
     private readonly documents: TextDocuments<TextDocument>,
-    parserAdapter: ParserAdapter
+    parserAdapter: ParserAdapter,
+    private readonly files: Files
   ) {
     this.expressionBuilder = new ExpressionBuilder(parserAdapter)
 
@@ -220,12 +218,7 @@ export class CucumberLanguageServer {
                 return []
               }
               const mustacheTemplate = settings.snippetTemplates[languageName]
-              let createFile = false
-              try {
-                await stat(new URL(link.targetUri))
-              } catch {
-                createFile = true
-              }
+              const createFile = !(await files.exists(link.targetUri))
               const relativePath = relative(this.rootPath, new URL(link.targetUri).pathname)
               const codeAction = getGenerateSnippetCodeAction(
                 diagnostics,
@@ -387,7 +380,7 @@ export class CucumberLanguageServer {
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
 
     this.connection.console.info(`Reindexing ${this.rootPath}`)
-    const gherkinSources = await loadGherkinSources(this.rootPath, settings.features)
+    const gherkinSources = await loadGherkinSources(this.files, this.rootPath, settings.features)
     this.connection.console.info(
       `* Found ${gherkinSources.length} feature file(s) in ${JSON.stringify(settings.features)}`
     )
@@ -396,7 +389,7 @@ export class CucumberLanguageServer {
       []
     )
     this.connection.console.info(`* Found ${stepTexts.length} steps in those feature files`)
-    const glueSources = await loadGlueSources(this.rootPath, settings.glue)
+    const glueSources = await loadGlueSources(this.files, this.rootPath, settings.glue)
     this.connection.console.info(
       `* Found ${glueSources.length} glue file(s) in ${JSON.stringify(settings.glue)}`
     )

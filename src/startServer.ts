@@ -4,12 +4,13 @@ import { createConnection, ProposedFeatures } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { CucumberLanguageServer } from './CucumberLanguageServer.js'
+import { Files } from './Files'
 import { version } from './version.js'
 
-export function startServer(adapter: ParserAdapter) {
+export function startServer(adapter: ParserAdapter, files: Files) {
   const connection = createConnection(ProposedFeatures.all)
   const documents = new TextDocuments(TextDocument)
-  new CucumberLanguageServer(connection, documents, adapter)
+  new CucumberLanguageServer(connection, documents, adapter, files)
   connection.listen()
 
   // Don't die on unhandled Promise rejections
