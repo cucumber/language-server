@@ -1,3 +1,4 @@
+import fg from 'fast-glob'
 import fs from 'fs/promises'
 import { DocumentUri } from 'vscode-languageserver-types'
 
@@ -16,5 +17,9 @@ export class NodeFiles implements Files {
 
   readFile(path: string): Promise<string> {
     return fs.readFile(path, 'utf-8')
+  }
+
+  findFiles(cwd: string, glob: string): Promise<readonly string[]> {
+    return fg(glob, { cwd, caseSensitiveMatch: false, onlyFiles: true })
   }
 }

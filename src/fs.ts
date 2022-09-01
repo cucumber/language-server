@@ -1,5 +1,4 @@
 import { LanguageName, Source } from '@cucumber/language-service'
-import fg from 'fast-glob'
 import { extname, join, resolve as resolvePath } from 'path'
 import url from 'url'
 
@@ -41,9 +40,14 @@ export async function loadGherkinSources(
 
 type LanguageNameByExt<L> = Record<string, L>
 
-export async function findPaths(cwd: string, globs: readonly string[]): Promise<readonly string[]> {
-  const pathPromises = globs.reduce<readonly Promise<string[]>[]>((prev, glob) => {
-    return prev.concat(fg(glob, { caseSensitiveMatch: false, onlyFiles: true, cwd }))
+export async function findPaths(
+  files: Files,
+  cwd: string,
+  globs: readonly string[]
+): Promise<readonly string[]> {
+  const pathPromises = globs.reduce<readonly Promise<readonly string[]>[]>((prev, glob) => {
+    const pathsPromise = files.findFiles(cwd, glob)
+    return prev.concat(pathsPromise)
   }, [])
   const pathArrays = await Promise.all(pathPromises)
   const paths = pathArrays.flatMap((paths) => paths)
@@ -57,7 +61,7 @@ async function loadSources<L>(
   extensions: Set<string>,
   languageNameByExt: LanguageNameByExt<L>
 ): Promise<readonly Source<L>[]> {
-  const paths = await findPaths(cwd, globs)
+  const paths = await findPaths(files, cwd, globs)
 
   return Promise.all(
     paths
