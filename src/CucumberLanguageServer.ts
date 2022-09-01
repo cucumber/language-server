@@ -12,6 +12,7 @@ import {
   jsSearchIndex,
   ParserAdapter,
   semanticTokenTypes,
+  Suggestion,
 } from '@cucumber/language-service'
 import { stat as statCb } from 'fs'
 import { extname, relative } from 'path'
@@ -83,6 +84,11 @@ export class CucumberLanguageServer {
   private expressionBuilderResult: ExpressionBuilderResult | undefined = undefined
   private reindexingTimeout: NodeJS.Timeout
   private rootPath: string
+  #suggestions: readonly Suggestion[]
+
+  get suggestions() {
+    return this.#suggestions
+  }
 
   constructor(
     private readonly connection: Connection,
@@ -426,13 +432,15 @@ export class CucumberLanguageServer {
     this.connection.languages.semanticTokens.refresh()
 
     try {
-      const suggestions = buildSuggestions(
+      this.#suggestions = buildSuggestions(
         this.expressionBuilderResult.registry,
         stepTexts,
         this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
       )
-      this.connection.console.info(`* Built ${suggestions.length} suggestions for auto complete`)
-      this.searchIndex = jsSearchIndex(suggestions)
+      this.connection.console.info(
+        `* Built ${this.#suggestions.length} suggestions for auto complete`
+      )
+      this.searchIndex = jsSearchIndex(this.#suggestions)
     } catch (err) {
       this.connection.console.error(err.stack)
       this.connection.console.error(
