@@ -5,6 +5,7 @@ export interface Files {
   readFile(path: string): Promise<string>
   findFiles(cwd: string, glob: string): Promise<readonly string[]>
   join(...paths: string[]): string
+  toUri(path: string): string
 }
 
 export function extname(path: string): string {

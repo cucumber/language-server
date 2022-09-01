@@ -1,6 +1,7 @@
 import fg from 'fast-glob'
 import fs from 'fs/promises'
-import path from 'path'
+import path, { resolve as resolvePath } from 'path'
+import url from 'url'
 import { DocumentUri } from 'vscode-languageserver-types'
 
 import { Files } from '../Files'
@@ -9,11 +10,10 @@ export class NodeFiles implements Files {
   async exists(uri: DocumentUri): Promise<boolean> {
     try {
       await fs.stat(new URL(uri))
+      return true
     } catch {
       return false
     }
-
-    return Promise.resolve(false)
   }
 
   readFile(path: string): Promise<string> {
@@ -26,5 +26,9 @@ export class NodeFiles implements Files {
 
   join(...paths: string[]): string {
     return path.join(...paths)
+  }
+
+  toUri(path: string): string {
+    return url.pathToFileURL(resolvePath(path)).href
   }
 }

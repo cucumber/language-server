@@ -1,6 +1,4 @@
 import { LanguageName, Source } from '@cucumber/language-service'
-import { resolve as resolvePath } from 'path'
-import url from 'url'
 
 import { extname, Files } from './Files'
 
@@ -74,7 +72,7 @@ async function loadSources<L>(
               resolve({
                 languageName,
                 content,
-                uri: url.pathToFileURL(resolvePath(path)).href,
+                uri: files.toUri(path),
               })
             )
           })
