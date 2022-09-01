@@ -4,6 +4,7 @@ export interface Files {
   exists(uri: DocumentUri): Promise<boolean>
   readFile(path: string): Promise<string>
   findFiles(cwd: string, glob: string): Promise<readonly string[]>
+  join(...paths: string[]): string
 }
 
 export function extname(path: string): string {

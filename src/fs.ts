@@ -1,5 +1,5 @@
 import { LanguageName, Source } from '@cucumber/language-service'
-import { join, resolve as resolvePath } from 'path'
+import { resolve as resolvePath } from 'path'
 import url from 'url'
 
 import { extname, Files } from './Files'
@@ -51,7 +51,7 @@ export async function findPaths(
   }, [])
   const pathArrays = await Promise.all(pathPromises)
   const paths = pathArrays.flatMap((paths) => paths)
-  return [...new Set(paths).values()].sort().map((path) => join(cwd, path))
+  return [...new Set(paths).values()].sort().map((path) => files.join(cwd, path))
 }
 
 async function loadSources<L>(
