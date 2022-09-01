@@ -1,8 +1,8 @@
 import { LanguageName, Source } from '@cucumber/language-service'
-import { extname, join, resolve as resolvePath } from 'path'
+import { join, resolve as resolvePath } from 'path'
 import url from 'url'
 
-import { Files } from './Files'
+import { extname, Files } from './Files'
 
 const glueExtByLanguageName: Record<LanguageName, string> = {
   typescript: '.ts',
