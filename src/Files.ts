@@ -1,10 +1,9 @@
-import { DocumentUri } from 'vscode-languageserver-types'
-
 export interface Files {
-  exists(uri: DocumentUri): Promise<boolean>
+  exists(uri: string): Promise<boolean>
   readFile(path: string): Promise<string>
-  findFiles(cwd: string, glob: string): Promise<readonly string[]>
+  findFiles(glob: string): Promise<readonly string[]>
   join(...paths: string[]): string
+  relative(uri: string): string
   toUri(path: string): string
 }
 

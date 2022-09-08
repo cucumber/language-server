@@ -43,7 +43,7 @@ describe('CucumberLanguageServer', () => {
       serverConnection,
       documents,
       new WasmParserAdapter('node_modules/@cucumber/language-service/dist'),
-      new NodeFiles()
+      (rootUri) => new NodeFiles(rootUri)
     )
     serverConnection.listen()
 

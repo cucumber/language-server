@@ -13,14 +13,14 @@ export type StreamInfo = {
   reader: NodeJS.ReadableStream
 }
 
-export function newWasmServer(wasmBaseUrl: string, files: Files) {
+export function newWasmServer(wasmBaseUrl: string, makeFiles: (rootUri: string) => Files) {
   const adapter: ParserAdapter = new WasmParserAdapter(wasmBaseUrl)
   const inputStream = new PassThrough()
   const outputStream = new PassThrough()
 
   const connection = createConnection(inputStream, outputStream)
   const documents = new TextDocuments(TextDocument)
-  new CucumberLanguageServer(connection, documents, adapter, files)
+  new CucumberLanguageServer(connection, documents, adapter, makeFiles)
   connection.listen()
 
   return {

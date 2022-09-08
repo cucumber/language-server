@@ -14,7 +14,6 @@ import {
   semanticTokenTypes,
   Suggestion,
 } from '@cucumber/language-service'
-import { extname, relative } from 'path'
 import {
   CodeAction,
   CodeActionKind,
@@ -28,7 +27,7 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { buildStepTexts } from './buildStepTexts.js'
-import { Files } from './Files'
+import { extname, Files } from './Files'
 import { getLanguage, loadGherkinSources, loadGlueSources } from './fs.js'
 import { getStepDefinitionSnippetLinks } from './getStepDefinitionSnippetLinks.js'
 import { Settings } from './types.js'
@@ -82,6 +81,7 @@ export class CucumberLanguageServer {
   private reindexingTimeout: NodeJS.Timeout
   private rootPath: string
   #suggestions: readonly Suggestion[]
+  #files: Files
 
   get suggestions() {
     return this.#suggestions
@@ -91,7 +91,7 @@ export class CucumberLanguageServer {
     private readonly connection: Connection,
     private readonly documents: TextDocuments<TextDocument>,
     parserAdapter: ParserAdapter,
-    private readonly files: Files
+    private readonly makeFiles: (rootUri: string) => Files
   ) {
     this.expressionBuilder = new ExpressionBuilder(parserAdapter)
 
@@ -115,6 +115,7 @@ export class CucumberLanguageServer {
       } else {
         connection.console.error(`Could not determine rootPath`)
       }
+      this.#files = makeFiles(this.rootPath)
       // Some users have reported that the globs don't find any files. This is to debug that issue
       connection.console.info(`Root path   : ${this.rootPath}`)
       connection.console.info(`Current dir : ${process.cwd()}`)
@@ -218,8 +219,8 @@ export class CucumberLanguageServer {
                 return []
               }
               const mustacheTemplate = settings.snippetTemplates[languageName]
-              const createFile = !(await files.exists(link.targetUri))
-              const relativePath = relative(this.rootPath, new URL(link.targetUri).pathname)
+              const createFile = !(await this.#files.exists(link.targetUri))
+              const relativePath = this.#files.relative(link.targetUri)
               const codeAction = getGenerateSnippetCodeAction(
                 diagnostics,
                 link,
@@ -380,7 +381,7 @@ export class CucumberLanguageServer {
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
 
     this.connection.console.info(`Reindexing ${this.rootPath}`)
-    const gherkinSources = await loadGherkinSources(this.files, this.rootPath, settings.features)
+    const gherkinSources = await loadGherkinSources(this.#files, settings.features)
     this.connection.console.info(
       `* Found ${gherkinSources.length} feature file(s) in ${JSON.stringify(settings.features)}`
     )
@@ -389,7 +390,7 @@ export class CucumberLanguageServer {
       []
     )
     this.connection.console.info(`* Found ${stepTexts.length} steps in those feature files`)
-    const glueSources = await loadGlueSources(this.files, this.rootPath, settings.glue)
+    const glueSources = await loadGlueSources(this.#files, settings.glue)
     this.connection.console.info(
       `* Found ${glueSources.length} glue file(s) in ${JSON.stringify(settings.glue)}`
     )
