@@ -62,6 +62,7 @@ const defaultSettings: Settings = {
     'src/test/**/*.java',
     // Cucumber-Js
     'features/**/*.ts',
+    'features/**/*.tsx',
     // Behave
     'features/**/*.php',
     // Behat
@@ -115,7 +116,7 @@ export class CucumberLanguageServer {
         connection.onDidChangeConfiguration((params) => {
           this.connection.console.info(`Client sent workspace/configuration`)
           this.reindex(<Settings>params.settings).catch((err) => {
-            connection.console.error(`Failed to reindex: ${err.stack}`)
+            connection.console.error(`Failed to reindex: ${err.message}`)
           })
         })
         try {
@@ -406,7 +407,7 @@ export class CucumberLanguageServer {
       `* Found ${this.expressionBuilderResult.expressionLinks.length} step definitions in those glue files`
     )
     for (const error of this.expressionBuilderResult.errors) {
-      this.connection.console.error(`* Step Definition errors: ${error.message}`)
+      this.connection.console.error(`* Step Definition errors: ${error.stack}`)
     }
 
     // Send diagnostics for all documents now that we're updated

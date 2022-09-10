@@ -62,7 +62,7 @@
   "devDependencies": {
     "@cucumber/cucumber": "8.5.3",
     "@types/mocha": "9.1.1",
-    "@types/node": "18.7.13",
+    "@types/node": "18.7.16",
     "@typescript-eslint/eslint-plugin": "5.36.2",
     "@typescript-eslint/parser": "5.36.2",
     "eslint": "8.23.0",
@@ -83,7 +83,7 @@
   },
   "dependencies": {
     "@cucumber/gherkin-utils": "^8.0.0",
-    "@cucumber/language-service": "^0.32.0",
+    "@cucumber/language-service": "^0.33.0",
     "fast-glob": "3.2.12",
     "source-map-support": "0.5.21",
     "vscode-languageserver": "8.0.2",
