@@ -1,7 +1,8 @@
 import { WasmParserAdapter } from '@cucumber/language-service/wasm'
 
-import { startServer } from '../startServer'
+import { Files } from '../Files'
+import { startServer } from '../startServer.js'
 
-export function startWasmServer(wasmBaseUrl: string) {
-  startServer(new WasmParserAdapter(wasmBaseUrl))
+export function startWasmServer(wasmBaseUrl: string, makeFiles: (rootUri: string) => Files) {
+  startServer(new WasmParserAdapter(wasmBaseUrl), makeFiles)
 }

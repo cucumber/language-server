@@ -12,10 +12,8 @@ import {
   jsSearchIndex,
   ParserAdapter,
   semanticTokenTypes,
+  Suggestion,
 } from '@cucumber/language-service'
-import { stat as statCb } from 'fs'
-import { extname, relative } from 'path'
-import { promisify } from 'util'
 import {
   CodeAction,
   CodeActionKind,
@@ -29,12 +27,11 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { buildStepTexts } from './buildStepTexts.js'
+import { extname, Files } from './Files'
 import { getLanguage, loadGherkinSources, loadGlueSources } from './fs.js'
 import { getStepDefinitionSnippetLinks } from './getStepDefinitionSnippetLinks.js'
 import { Settings } from './types.js'
 import { version } from './version.js'
-
-const stat = promisify(statCb)
 
 type ServerInfo = {
   name: string
@@ -84,14 +81,23 @@ export class CucumberLanguageServer {
   private expressionBuilderResult: ExpressionBuilderResult | undefined = undefined
   private reindexingTimeout: NodeJS.Timeout
   private rootPath: string
+  #suggestions: readonly Suggestion[]
+  #files: Files
+
+  get suggestions() {
+    return this.#suggestions
+  }
 
   constructor(
     private readonly connection: Connection,
     private readonly documents: TextDocuments<TextDocument>,
-    parserAdapter: ParserAdapter
+    parserAdapter: ParserAdapter,
+    private readonly makeFiles: (rootUri: string) => Files
   ) {
     this.expressionBuilder = new ExpressionBuilder(parserAdapter)
+
     connection.onInitialize(async (params) => {
+      // connection.console.log(`PARAMS: ${JSON.stringify(params, null, 2)}`)
       await parserAdapter.init()
       if (params.clientInfo) {
         connection.console.info(
@@ -103,11 +109,14 @@ export class CucumberLanguageServer {
 
       if (params.rootPath) {
         this.rootPath = params.rootPath
+      } else if (params.rootUri) {
+        this.rootPath = new URL(params.rootUri).pathname
       } else if (params.workspaceFolders && params.workspaceFolders.length > 0) {
         this.rootPath = new URL(params.workspaceFolders[0].uri).pathname
       } else {
-        connection.console.error(`Client did not send rootPath or workspaceFolders`)
+        connection.console.error(`Could not determine rootPath`)
       }
+      this.#files = makeFiles(this.rootPath)
       // Some users have reported that the globs don't find any files. This is to debug that issue
       connection.console.info(`Root path   : ${this.rootPath}`)
       connection.console.info(`Current dir : ${process.cwd()}`)
@@ -211,13 +220,8 @@ export class CucumberLanguageServer {
                 return []
               }
               const mustacheTemplate = settings.snippetTemplates[languageName]
-              let createFile = false
-              try {
-                await stat(new URL(link.targetUri))
-              } catch {
-                createFile = true
-              }
-              const relativePath = relative(this.rootPath, new URL(link.targetUri).pathname)
+              const createFile = !(await this.#files.exists(link.targetUri))
+              const relativePath = this.#files.relative(link.targetUri)
               const codeAction = getGenerateSnippetCodeAction(
                 diagnostics,
                 link,
@@ -377,8 +381,8 @@ export class CucumberLanguageServer {
     // TODO: Send WorkDoneProgressBegin notification
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
 
-    this.connection.console.info(`Reindexing...`)
-    const gherkinSources = await loadGherkinSources(settings.features)
+    this.connection.console.info(`Reindexing ${this.rootPath}`)
+    const gherkinSources = await loadGherkinSources(this.#files, settings.features)
     this.connection.console.info(
       `* Found ${gherkinSources.length} feature file(s) in ${JSON.stringify(settings.features)}`
     )
@@ -387,7 +391,7 @@ export class CucumberLanguageServer {
       []
     )
     this.connection.console.info(`* Found ${stepTexts.length} steps in those feature files`)
-    const glueSources = await loadGlueSources(settings.glue)
+    const glueSources = await loadGlueSources(this.#files, settings.glue)
     this.connection.console.info(
       `* Found ${glueSources.length} glue file(s) in ${JSON.stringify(settings.glue)}`
     )
@@ -423,13 +427,15 @@ export class CucumberLanguageServer {
     this.connection.languages.semanticTokens.refresh()
 
     try {
-      const suggestions = buildSuggestions(
+      this.#suggestions = buildSuggestions(
         this.expressionBuilderResult.registry,
         stepTexts,
         this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
       )
-      this.connection.console.info(`* Built ${suggestions.length} suggestions for auto complete`)
-      this.searchIndex = jsSearchIndex(suggestions)
+      this.connection.console.info(
+        `* Built ${this.#suggestions.length} suggestions for auto complete`
+      )
+      this.searchIndex = jsSearchIndex(this.#suggestions)
     } catch (err) {
       this.connection.console.error(err.stack)
       this.connection.console.error(
