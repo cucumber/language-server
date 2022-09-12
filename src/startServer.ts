@@ -4,7 +4,7 @@ import { createConnection, ProposedFeatures } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { CucumberLanguageServer } from './CucumberLanguageServer.js'
-import { Files } from './Files'
+import { Files } from './Files.js'
 import { version } from './version.js'
 
 export function startServer(adapter: ParserAdapter, makeFiles: (rootUri: string) => Files) {
