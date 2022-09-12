@@ -25,9 +25,11 @@ export class NodeFiles implements Files {
     return fs.readFile(path, 'utf-8')
   }
 
-  findFiles(glob: string): Promise<readonly string[]> {
+  async findFiles(glob: string): Promise<readonly string[]> {
     console.log(`*** findFiles('${glob}')`)
-    return fg(glob, { cwd: this.rootUri, caseSensitiveMatch: false, onlyFiles: true })
+    const result = await fg(glob, { cwd: this.rootUri, caseSensitiveMatch: false, onlyFiles: true })
+    console.log(`****** ==> ('${result}')`)
+    return result
   }
 
   join(...paths: string[]): string {
