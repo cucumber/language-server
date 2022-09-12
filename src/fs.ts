@@ -42,19 +42,16 @@ export async function loadGherkinSources(
 
 type LanguageNameByExt<L> = Record<string, L>
 
-export async function findPaths(
-  files: Files,
-  globs: readonly string[]
-): Promise<readonly string[]> {
+export async function findUris(files: Files, globs: readonly string[]): Promise<readonly string[]> {
   // Run all the globs in parallel
-  const pathsPromises = globs.reduce<readonly Promise<readonly string[]>[]>((prev, glob) => {
-    const pathsPromise = files.findFiles(glob)
-    return prev.concat(pathsPromise)
+  const urisPromises = globs.reduce<readonly Promise<readonly string[]>[]>((prev, glob) => {
+    const urisPromise = files.findUris(glob)
+    return prev.concat(urisPromise)
   }, [])
-  const pathArrays = await Promise.all(pathsPromises)
+  const uriArrays = await Promise.all(urisPromises)
   // Flatten them all
-  const paths = pathArrays.flatMap((paths) => paths)
-  return [...new Set(paths).values()].sort()
+  const uris = uriArrays.flatMap((paths) => paths)
+  return [...new Set(uris).values()].sort()
 }
 
 async function loadSources<L>(
@@ -63,20 +60,20 @@ async function loadSources<L>(
   extensions: Set<string>,
   languageNameByExt: LanguageNameByExt<L>
 ): Promise<readonly Source<L>[]> {
-  const paths = await findPaths(files, globs)
+  const uris = await findUris(files, globs)
 
   return Promise.all(
-    paths
-      .filter((path) => extensions.has(extname(path)))
+    uris
+      .filter((uri) => extensions.has(extname(uri)))
       .map<Promise<Source<L>>>(
-        (path) =>
+        (uri) =>
           new Promise<Source<L>>((resolve) => {
-            const languageName = languageNameByExt[extname(path)]
-            return files.readFile(path).then((content) =>
+            const languageName = languageNameByExt[extname(uri)]
+            return files.readFile(uri).then((content) =>
               resolve({
                 languageName,
                 content,
-                uri: files.toUri(path),
+                uri,
               })
             )
           })

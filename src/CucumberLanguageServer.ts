@@ -80,7 +80,7 @@ export class CucumberLanguageServer {
   private searchIndex: Index
   private expressionBuilderResult: ExpressionBuilderResult | undefined = undefined
   private reindexingTimeout: NodeJS.Timeout
-  private rootPath: string
+  private rootUri: string
   #suggestions: readonly Suggestion[]
   #files: Files
 
@@ -108,17 +108,17 @@ export class CucumberLanguageServer {
       }
 
       if (params.rootPath) {
-        this.rootPath = params.rootPath
+        this.rootUri = `file://${params.rootPath}`
       } else if (params.rootUri) {
-        this.rootPath = new URL(params.rootUri).pathname
+        this.rootUri = params.rootUri
       } else if (params.workspaceFolders && params.workspaceFolders.length > 0) {
-        this.rootPath = new URL(params.workspaceFolders[0].uri).pathname
+        this.rootUri = params.workspaceFolders[0].uri
       } else {
         connection.console.error(`Could not determine rootPath`)
       }
-      this.#files = makeFiles(this.rootPath)
+      this.#files = makeFiles(this.rootUri)
       // Some users have reported that the globs don't find any files. This is to debug that issue
-      connection.console.info(`Root path   : ${this.rootPath}`)
+      connection.console.info(`Root uri    : ${this.rootUri}`)
       connection.console.info(`Current dir : ${process.cwd()}`)
 
       if (params.capabilities.workspace?.configuration) {
@@ -198,7 +198,7 @@ export class CucumberLanguageServer {
       if (params.capabilities.textDocument?.codeAction) {
         connection.onCodeAction(async (params) => {
           const diagnostics = params.context.diagnostics
-          if (this.rootPath && this.expressionBuilderResult) {
+          if (this.expressionBuilderResult) {
             const settings = await this.getSettings()
             const links = getStepDefinitionSnippetLinks(
               this.expressionBuilderResult.expressionLinks.map((l) => l.locationLink)
@@ -221,7 +221,7 @@ export class CucumberLanguageServer {
               }
               const mustacheTemplate = settings.snippetTemplates[languageName]
               const createFile = !(await this.#files.exists(link.targetUri))
-              const relativePath = this.#files.relative(link.targetUri)
+              const relativePath = this.#files.relativePath(link.targetUri)
               const codeAction = getGenerateSnippetCodeAction(
                 diagnostics,
                 link,
@@ -381,7 +381,7 @@ export class CucumberLanguageServer {
     // TODO: Send WorkDoneProgressBegin notification
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
 
-    this.connection.console.info(`Reindexing ${this.rootPath}`)
+    this.connection.console.info(`Reindexing ${this.rootUri}`)
     const gherkinSources = await loadGherkinSources(this.#files, settings.features)
     this.connection.console.info(
       `* Found ${gherkinSources.length} feature file(s) in ${JSON.stringify(settings.features)}`

@@ -1,6 +1,6 @@
 import fg from 'fast-glob'
 import fs from 'fs/promises'
-import path, { relative, resolve as resolvePath } from 'path'
+import { relative } from 'path'
 import url from 'url'
 
 import { Files } from '../Files'
@@ -20,34 +20,24 @@ export class NodeFiles implements Files {
     }
   }
 
-  readFile(path: string): Promise<string> {
-    console.log(`*** readFile('${path}')`)
+  readFile(uri: string): Promise<string> {
+    console.log(`*** readFile('${uri}')`)
+    const path = url.fileURLToPath(uri)
     return fs.readFile(path, 'utf-8')
   }
 
-  async findFiles(glob: string): Promise<readonly string[]> {
-    console.log(`*** findFiles('${glob}')`)
-    const result = await fg(glob, { cwd: this.rootUri, caseSensitiveMatch: false, onlyFiles: true })
-    console.log(`****** ==> ('${result}')`)
-    return result
+  async findUris(glob: string): Promise<readonly string[]> {
+    const cwd = url.fileURLToPath(this.rootUri)
+    console.log(`*** findFiles('${glob}') in cwd: ${cwd}`)
+    const paths = await fg(glob, { cwd, caseSensitiveMatch: false, onlyFiles: true })
+    const uris = paths.map((path) => url.pathToFileURL(path).href)
+    console.log(`****** ==> ${uris}`)
+    return uris
   }
 
-  join(...paths: string[]): string {
-    console.log(`*** join('${paths}')`)
-    const result = path.join(this.rootUri, ...paths)
-    console.log(`****** jresult: '${paths}'`)
-    return result
-  }
-
-  relative(uri: string): string {
-    const result = relative(this.rootUri, new URL(uri).pathname)
-    console.log(`*** relative('${uri}') => ${result}`)
-    return result
-  }
-
-  toUri(path: string): string {
-    const result = url.pathToFileURL(resolvePath(path)).href
-    console.log(`*** toUri('${path}') => ${result}`)
-    return result
+  relativePath(uri: string): string {
+    const path = relative(new URL(this.rootUri).pathname, new URL(uri).pathname)
+    console.log(`*** relative('${uri}') => ${path}`)
+    return path
   }
 }
