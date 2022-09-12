@@ -2,18 +2,24 @@ import { LanguageName, Source } from '@cucumber/language-service'
 
 import { extname, Files } from './Files'
 
-const glueExtByLanguageName: Record<LanguageName, string> = {
-  typescript: '.ts',
-  java: '.java',
-  c_sharp: '.cs',
-  php: '.php',
-  ruby: '.rb',
-  python: '.py',
+export const glueExtByLanguageName: Record<LanguageName, string[]> = {
+  tsx: ['.ts', '.tsx'],
+  java: ['.java'],
+  c_sharp: ['.cs'],
+  php: ['.php'],
+  ruby: ['.rb'],
+  python: ['.py'],
 }
 
-const glueLanguageNameByExt = Object.fromEntries<LanguageName>(
-  Object.entries(glueExtByLanguageName).map(([language, ext]) => [ext, language as LanguageName])
-)
+type ExtLangEntry = [string, LanguageName]
+
+const entries = Object.entries(glueExtByLanguageName).reduce<ExtLangEntry[]>((prev, entry) => {
+  const newEntries: ExtLangEntry[] = entry[1].map((ext) => [ext, entry[0] as LanguageName])
+  return prev.concat(newEntries)
+}, [])
+
+const glueLanguageNameByExt = Object.fromEntries<LanguageName>(entries)
+
 const glueExtensions = new Set(Object.keys(glueLanguageNameByExt))
 
 export async function loadGlueSources(
