@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.13.1] - 2022-09-13
 ### Fixed
 - Fixed a regression in URI handling on Windows.
 
@@ -194,7 +195,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.13.1...HEAD
+[0.13.1]: https://github.com/cucumber/language-server/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/cucumber/language-server/compare/v0.12.14...v0.13.0
 [0.12.14]: https://github.com/cucumber/language-server/compare/v0.12.13...v0.12.14
 [0.12.13]: https://github.com/cucumber/language-server/compare/v0.12.12...v0.12.13
