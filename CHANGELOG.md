@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.12.14] - 2022-09-10
 
+### Fixed
+- Support `.tsx` in step definitions
+- Bugfixes in [@cucumber/language-service 0.33.0](https://github.com/cucumber/language-service/releases/tag/v0.33.0)
+
 ## [0.12.13] - 2022-08-29
 ### Fixed
 - Update default globs to work with Pytest-BDD conventions ([#64](https://github.com/cucumber/language-server/pull/64)
