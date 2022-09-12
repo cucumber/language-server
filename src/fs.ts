@@ -46,13 +46,15 @@ export async function findPaths(
   files: Files,
   globs: readonly string[]
 ): Promise<readonly string[]> {
-  const pathPromises = globs.reduce<readonly Promise<readonly string[]>[]>((prev, glob) => {
+  // Run all the globs in parallel
+  const pathsPromises = globs.reduce<readonly Promise<readonly string[]>[]>((prev, glob) => {
     const pathsPromise = files.findFiles(glob)
     return prev.concat(pathsPromise)
   }, [])
-  const pathArrays = await Promise.all(pathPromises)
+  const pathArrays = await Promise.all(pathsPromises)
+  // Flatten them all
   const paths = pathArrays.flatMap((paths) => paths)
-  return [...new Set(paths).values()].sort().map((path) => files.join(path))
+  return [...new Set(paths).values()].sort()
 }
 
 async function loadSources<L>(

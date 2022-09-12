@@ -97,7 +97,7 @@ export class CucumberLanguageServer {
     this.expressionBuilder = new ExpressionBuilder(parserAdapter)
 
     connection.onInitialize(async (params) => {
-      connection.console.log(`PARAMS: ${JSON.stringify(params, null, 2)}`)
+      // connection.console.log(`PARAMS: ${JSON.stringify(params, null, 2)}`)
       await parserAdapter.init()
       if (params.clientInfo) {
         connection.console.info(

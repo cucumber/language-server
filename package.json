@@ -12,12 +12,12 @@
       "require": "./dist/cjs/src/index.js"
     },
     "./node": {
-      "import": "./dist/esm/src/node/startNodeServer.js",
-      "require": "./dist/cjs/src/node/startNodeServer.js"
+      "import": "./dist/esm/src/node/index.js",
+      "require": "./dist/cjs/src/node/index.js"
     },
     "./wasm": {
-      "import": "./dist/esm/src/wasm/startWasmServer.js",
-      "require": "./dist/cjs/src/wasm/startWasmServer.js"
+      "import": "./dist/esm/src/wasm/index.js",
+      "require": "./dist/cjs/src/wasm/index.js"
     }
   },
   "files": [
