@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed a regression in URI handling on Windows.
+
 ## [0.13.0] - 2022-09-12
 ### Added
 - New API to make it possible to start the server in-process. This enables some additional features in the vscode extension. ([#65](https://github.com/cucumber/language-server/pull/65))
