@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.13.0] - 2022-09-12
 ### Added
 - New API to make it possible to start the server in-process. This enables some additional features in the vscode extension. ([#65](https://github.com/cucumber/language-server/pull/65))
 
 ## [0.12.14] - 2022-09-10
-
 ### Fixed
 - Support `.tsx` in step definitions
 - Bugfixes in [@cucumber/language-service 0.33.0](https://github.com/cucumber/language-service/releases/tag/v0.33.0)
@@ -191,7 +191,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.12.14...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/cucumber/language-server/compare/v0.12.14...v0.13.0
 [0.12.14]: https://github.com/cucumber/language-server/compare/v0.12.13...v0.12.14
 [0.12.13]: https://github.com/cucumber/language-server/compare/v0.12.12...v0.12.13
 [0.12.12]: https://github.com/cucumber/language-server/compare/v0.12.11...v0.12.12
