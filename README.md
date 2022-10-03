@@ -11,7 +11,8 @@ It may also be used to power other LSP editors.
 
 ## Supported features
 
-See [Cucumber Language Service](https://github.com/cucumber/language-service).
+See [Cucumber Language Service](https://github.com/cucumber/language-service), which implements most of the logic in this server. 
+If you are looking to add a new feature, you should probably add it to [Cucumber Language Service](https://github.com/cucumber/language-service).
 
 ### Settings
 
