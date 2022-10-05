@@ -66,6 +66,9 @@ const defaultSettings: Settings = {
     'features/**/*.py',
     // Pytest-BDD
     'tests/**/*.py',
+    // Cucumber Rust
+    'tests/**/*.rs',
+    'features/**/*.rs',
     // Cucumber-Ruby
     'features/**/*.rb',
     // SpecFlow
