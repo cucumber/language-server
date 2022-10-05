@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2022-10-05
 ### Added
 - Support for [Cucumber Rust](https://github.com/cucumber-rs/cucumber) ([#82](https://github.com/cucumber/language-service/issues/82), [#99](https://github.com/cucumber/language-service/pull/99))
 
@@ -201,7 +202,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v0.13.1...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/cucumber/language-server/compare/v0.13.1...v1.0.0
 [0.13.1]: https://github.com/cucumber/language-server/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/cucumber/language-server/compare/v0.12.14...v0.13.0
 [0.12.14]: https://github.com/cucumber/language-server/compare/v0.12.13...v0.12.14
