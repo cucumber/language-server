@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.1] - 2022-10-10
 ### Fixed
 - Fix rust snippet fn name to lowercase ([#103](https://github.com/cucumber/language-service/issues/103), [#104](https://github.com/cucumber/language-service/pull/104))
 
@@ -205,7 +206,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/cucumber/language-server/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/cucumber/language-server/compare/v0.13.1...v1.0.0
 [0.13.1]: https://github.com/cucumber/language-server/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/cucumber/language-server/compare/v0.12.14...v0.13.0
