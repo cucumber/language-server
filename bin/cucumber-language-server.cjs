@@ -2,4 +2,9 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 require('source-map-support').install()
 const { startWasmServer } = require('../dist/cjs/src/wasm/startWasmServer')
-startWasmServer(`${__dirname}/../node_modules/@cucumber/language-service/dist`)
+const { NodeFiles } = require('../dist/cjs/src/node/NodeFiles')
+const url = require('url')
+const wasmBaseUrl = url.pathToFileURL(
+  `${__dirname}/../node_modules/@cucumber/language-service/dist`
+)
+startWasmServer(wasmBaseUrl.href, (rootUri) => new NodeFiles(rootUri))
