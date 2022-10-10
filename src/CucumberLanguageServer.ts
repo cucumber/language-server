@@ -5,6 +5,7 @@ import {
   getGenerateSnippetCodeAction,
   getGherkinCompletionItems,
   getGherkinDiagnostics,
+  getGherkinDocumentFeatureSymbol,
   getGherkinFormattingEdits,
   getGherkinSemanticTokens,
   getStepDefinitionLocationLinks,
@@ -261,6 +262,18 @@ export class CucumberLanguageServer {
         connection.console.info('onDefinition is disabled')
       }
 
+      if (params.capabilities.textDocument?.documentSymbol) {
+        connection.onDocumentSymbol((params) => {
+          const doc = documents.get(params.textDocument.uri)
+          if (!doc) return []
+          const gherkinSource = doc.getText()
+          const symbol = getGherkinDocumentFeatureSymbol(gherkinSource)
+          return symbol ? [symbol] : null
+        })
+      } else {
+        connection.console.info('onDocumentSymbol is disabled')
+      }
+
       return {
         capabilities: this.capabilities(),
         serverInfo: this.info(),
@@ -310,6 +323,9 @@ export class CucumberLanguageServer {
           tokenTypes: semanticTokenTypes,
           tokenModifiers: [],
         },
+      },
+      documentSymbolProvider: {
+        label: 'Cucumber',
       },
       documentFormattingProvider: true,
       definitionProvider: true,
