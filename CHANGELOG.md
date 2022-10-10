@@ -7,13 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-### Fixed
-- Fix standalone startup (for use in e.g. neovim) ([#66](https://github.com/cucumber/language-server/issues/66), [#68](https://github.com/cucumber/language-server/pull/68))
-
+## [1.1.0] - 2022-10-10
 ### Added
 - Add support for [document symbols](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_documentSymbol) ([#98](https://github.com/cucumber/language-service/issues/98), [#106](https://github.com/cucumber/language-service/pull/106))
 - (Java) Recognise regexps with `(?i)`, with the caveat that the resulting JavaScript `RegExp` is _not_ case insensitive ([#100](https://github.com/cucumber/language-service/issues/100), [#108](https://github.com/cucumber/language-service/pull/108))
 - (TypeScript) Add support for template literals without subsitutions. ([#101](https://github.com/cucumber/language-service/issues/101), [#107](https://github.com/cucumber/language-service/pull/107))
+
+### Fixed
+- Fix standalone startup (for use in e.g. neovim) ([#66](https://github.com/cucumber/language-server/issues/66), [#68](https://github.com/cucumber/language-server/pull/68))
 
 ## [1.0.1] - 2022-10-10
 ### Fixed
@@ -214,7 +215,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/cucumber/language-server/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/cucumber/language-server/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/cucumber/language-server/compare/v0.13.1...v1.0.0
 [0.13.1]: https://github.com/cucumber/language-server/compare/v0.13.0...v0.13.1
