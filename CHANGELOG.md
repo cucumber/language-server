@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.1] - 2022-10-11
 ### Fixed
 - (TypeScript) Fix bug in template literal recognition
 
@@ -218,7 +219,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/cucumber/language-server/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/cucumber/language-server/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/cucumber/language-server/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/cucumber/language-server/compare/v0.13.1...v1.0.0
