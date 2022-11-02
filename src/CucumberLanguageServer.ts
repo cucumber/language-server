@@ -12,6 +12,7 @@ import {
   getStepDefinitionLocationLinks,
   Index,
   jsSearchIndex,
+  ParameterTypeRegistry,
   ParserAdapter,
   semanticTokenTypes,
   Suggestion,
@@ -86,7 +87,10 @@ export class CucumberLanguageServer {
   private expressionBuilderResult: ExpressionBuilderResult | undefined = undefined
   private reindexingTimeout: NodeJS.Timeout
   private rootUri: string
-  #files: Files
+  private files: Files
+  public registry: ParameterTypeRegistry
+  public expressions: readonly Expression[] = []
+  public suggestions: readonly Suggestion[] = []
 
   constructor(
     private readonly connection: Connection,
@@ -120,7 +124,7 @@ export class CucumberLanguageServer {
       } else {
         connection.console.error(`Could not determine rootPath`)
       }
-      this.#files = makeFiles(this.rootUri)
+      this.files = makeFiles(this.rootUri)
       // Some users have reported that the globs don't find any files. This is to debug that issue
       connection.console.info(`Root uri    : ${this.rootUri}`)
       connection.console.info(`Current dir : ${process.cwd()}`)
@@ -224,8 +228,8 @@ export class CucumberLanguageServer {
                 return []
               }
               const mustacheTemplate = settings.snippetTemplates[languageName]
-              const createFile = !(await this.#files.exists(link.targetUri))
-              const relativePath = this.#files.relativePath(link.targetUri)
+              const createFile = !(await this.files.exists(link.targetUri))
+              const relativePath = this.files.relativePath(link.targetUri)
               const codeAction = getGenerateSnippetCodeAction(
                 diagnostics,
                 link,
@@ -401,7 +405,7 @@ export class CucumberLanguageServer {
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
 
     this.connection.console.info(`Reindexing ${this.rootUri}`)
-    const gherkinSources = await loadGherkinSources(this.#files, settings.features)
+    const gherkinSources = await loadGherkinSources(this.files, settings.features)
     this.connection.console.info(
       `* Found ${gherkinSources.length} feature file(s) in ${JSON.stringify(settings.features)}`
     )
@@ -410,7 +414,7 @@ export class CucumberLanguageServer {
       []
     )
     this.connection.console.info(`* Found ${stepTexts.length} steps in those feature files`)
-    const glueSources = await loadGlueSources(this.#files, settings.glue)
+    const glueSources = await loadGlueSources(this.files, settings.glue)
     this.connection.console.info(
       `* Found ${glueSources.length} glue file(s) in ${JSON.stringify(settings.glue)}`
     )
@@ -454,6 +458,9 @@ export class CucumberLanguageServer {
       )
       this.connection.console.info(`* Built ${suggestions.length} suggestions for auto complete`)
       this.searchIndex = jsSearchIndex(suggestions)
+      this.registry = this.expressionBuilderResult.registry
+      this.expressions = expressions
+      this.suggestions = suggestions
       this.onReindexed(expressions, suggestions)
     } catch (err) {
       this.connection.console.error(err.stack)
