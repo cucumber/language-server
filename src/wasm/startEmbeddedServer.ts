@@ -1,4 +1,4 @@
-import { Expression, ParserAdapter, Suggestion } from '@cucumber/language-service'
+import { CucumberExpressions, ParserAdapter, Suggestion } from '@cucumber/language-service'
 import { WasmParserAdapter } from '@cucumber/language-service/wasm'
 import { PassThrough } from 'stream'
 import { Connection, TextDocuments } from 'vscode-languageserver'
@@ -18,7 +18,11 @@ export type ServerInfo = {
 export function startEmbeddedServer(
   wasmBaseUrl: string,
   makeFiles: (rootUri: string) => Files,
-  onSuggestions: (expressions: readonly Expression[], suggestions: readonly Suggestion[]) => void
+  onReindexed: (
+    registry: CucumberExpressions.ParameterTypeRegistry,
+    expressions: readonly CucumberExpressions.Expression[],
+    suggestions: readonly Suggestion[]
+  ) => void
 ): ServerInfo {
   const adapter: ParserAdapter = new WasmParserAdapter(wasmBaseUrl)
   const inputStream = new PassThrough()
@@ -26,13 +30,7 @@ export function startEmbeddedServer(
 
   const connection = createConnection(inputStream, outputStream)
   const documents = new TextDocuments(TextDocument)
-  const server = new CucumberLanguageServer(
-    connection,
-    documents,
-    adapter,
-    makeFiles,
-    onSuggestions
-  )
+  const server = new CucumberLanguageServer(connection, documents, adapter, makeFiles, onReindexed)
   connection.listen()
 
   return {

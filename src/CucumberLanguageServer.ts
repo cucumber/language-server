@@ -1,6 +1,6 @@
 import {
   buildSuggestions,
-  Expression,
+  CucumberExpressions,
   ExpressionBuilder,
   ExpressionBuilderResult,
   getGenerateSnippetCodeAction,
@@ -12,7 +12,6 @@ import {
   getStepDefinitionLocationLinks,
   Index,
   jsSearchIndex,
-  ParameterTypeRegistry,
   ParserAdapter,
   semanticTokenTypes,
   Suggestion,
@@ -88,8 +87,8 @@ export class CucumberLanguageServer {
   private reindexingTimeout: NodeJS.Timeout
   private rootUri: string
   private files: Files
-  public registry: ParameterTypeRegistry
-  public expressions: readonly Expression[] = []
+  public registry: CucumberExpressions.ParameterTypeRegistry
+  public expressions: readonly CucumberExpressions.Expression[] = []
   public suggestions: readonly Suggestion[] = []
 
   constructor(
@@ -98,7 +97,8 @@ export class CucumberLanguageServer {
     parserAdapter: ParserAdapter,
     private readonly makeFiles: (rootUri: string) => Files,
     private readonly onReindexed: (
-      expressions: readonly Expression[],
+      registry: CucumberExpressions.ParameterTypeRegistry,
+      expressions: readonly CucumberExpressions.Expression[],
       suggestions: readonly Suggestion[]
     ) => void
   ) {
@@ -458,10 +458,11 @@ export class CucumberLanguageServer {
       )
       this.connection.console.info(`* Built ${suggestions.length} suggestions for auto complete`)
       this.searchIndex = jsSearchIndex(suggestions)
-      this.registry = this.expressionBuilderResult.registry
+      const registry = this.expressionBuilderResult.registry
+      this.registry = registry
       this.expressions = expressions
       this.suggestions = suggestions
-      this.onReindexed(expressions, suggestions)
+      this.onReindexed(registry, expressions, suggestions)
     } catch (err) {
       this.connection.console.error(err.stack)
       this.connection.console.error(
