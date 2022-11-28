@@ -23,8 +23,8 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 import { CompletionItem, CompletionItemKind } from 'vscode-languageserver-types'
 
 import { CucumberLanguageServer } from '../src/CucumberLanguageServer.js'
-import { NodeFiles } from '../src/node/NodeFiles'
-import { Settings } from '../src/types'
+import { NodeFiles } from '../src/node/NodeFiles.js'
+import { Settings } from '../src/types.js'
 
 describe('CucumberLanguageServer', () => {
   let inputStream: Duplex
@@ -43,7 +43,8 @@ describe('CucumberLanguageServer', () => {
       serverConnection,
       documents,
       new WasmParserAdapter('node_modules/@cucumber/language-service/dist'),
-      (rootUri) => new NodeFiles(rootUri)
+      (rootUri) => new NodeFiles(rootUri),
+      () => undefined
     )
     serverConnection.listen()
 

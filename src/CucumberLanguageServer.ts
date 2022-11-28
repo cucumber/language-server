@@ -1,5 +1,6 @@
 import {
   buildSuggestions,
+  CucumberExpressions,
   ExpressionBuilder,
   ExpressionBuilderResult,
   getGenerateSnippetCodeAction,
@@ -85,18 +86,21 @@ export class CucumberLanguageServer {
   private expressionBuilderResult: ExpressionBuilderResult | undefined = undefined
   private reindexingTimeout: NodeJS.Timeout
   private rootUri: string
-  #suggestions: readonly Suggestion[]
-  #files: Files
-
-  get suggestions() {
-    return this.#suggestions
-  }
+  private files: Files
+  public registry: CucumberExpressions.ParameterTypeRegistry
+  public expressions: readonly CucumberExpressions.Expression[] = []
+  public suggestions: readonly Suggestion[] = []
 
   constructor(
     private readonly connection: Connection,
     private readonly documents: TextDocuments<TextDocument>,
     parserAdapter: ParserAdapter,
-    private readonly makeFiles: (rootUri: string) => Files
+    private readonly makeFiles: (rootUri: string) => Files,
+    private readonly onReindexed: (
+      registry: CucumberExpressions.ParameterTypeRegistry,
+      expressions: readonly CucumberExpressions.Expression[],
+      suggestions: readonly Suggestion[]
+    ) => void
   ) {
     this.expressionBuilder = new ExpressionBuilder(parserAdapter)
 
@@ -120,7 +124,7 @@ export class CucumberLanguageServer {
       } else {
         connection.console.error(`Could not determine rootPath`)
       }
-      this.#files = makeFiles(this.rootUri)
+      this.files = makeFiles(this.rootUri)
       // Some users have reported that the globs don't find any files. This is to debug that issue
       connection.console.info(`Root uri    : ${this.rootUri}`)
       connection.console.info(`Current dir : ${process.cwd()}`)
@@ -224,8 +228,8 @@ export class CucumberLanguageServer {
                 return []
               }
               const mustacheTemplate = settings.snippetTemplates[languageName]
-              const createFile = !(await this.#files.exists(link.targetUri))
-              const relativePath = this.#files.relativePath(link.targetUri)
+              const createFile = !(await this.files.exists(link.targetUri))
+              const relativePath = this.files.relativePath(link.targetUri)
               const codeAction = getGenerateSnippetCodeAction(
                 diagnostics,
                 link,
@@ -401,7 +405,7 @@ export class CucumberLanguageServer {
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
 
     this.connection.console.info(`Reindexing ${this.rootUri}`)
-    const gherkinSources = await loadGherkinSources(this.#files, settings.features)
+    const gherkinSources = await loadGherkinSources(this.files, settings.features)
     this.connection.console.info(
       `* Found ${gherkinSources.length} feature file(s) in ${JSON.stringify(settings.features)}`
     )
@@ -410,7 +414,7 @@ export class CucumberLanguageServer {
       []
     )
     this.connection.console.info(`* Found ${stepTexts.length} steps in those feature files`)
-    const glueSources = await loadGlueSources(this.#files, settings.glue)
+    const glueSources = await loadGlueSources(this.files, settings.glue)
     this.connection.console.info(
       `* Found ${glueSources.length} glue file(s) in ${JSON.stringify(settings.glue)}`
     )
@@ -446,15 +450,19 @@ export class CucumberLanguageServer {
     this.connection.languages.semanticTokens.refresh()
 
     try {
-      this.#suggestions = buildSuggestions(
+      const expressions = this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
+      const suggestions = buildSuggestions(
         this.expressionBuilderResult.registry,
         stepTexts,
-        this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
+        expressions
       )
-      this.connection.console.info(
-        `* Built ${this.#suggestions.length} suggestions for auto complete`
-      )
-      this.searchIndex = jsSearchIndex(this.#suggestions)
+      this.connection.console.info(`* Built ${suggestions.length} suggestions for auto complete`)
+      this.searchIndex = jsSearchIndex(suggestions)
+      const registry = this.expressionBuilderResult.registry
+      this.registry = registry
+      this.expressions = expressions
+      this.suggestions = suggestions
+      this.onReindexed(registry, expressions, suggestions)
     } catch (err) {
       this.connection.console.error(err.stack)
       this.connection.console.error(
