@@ -62,6 +62,8 @@ const defaultSettings: Settings = {
     // Cucumber-Js
     'features/**/*.ts',
     'features/**/*.tsx',
+    'features/**/*.js',
+    'features/**/*.jsx',
     // Behave
     'features/**/*.php',
     // Behat

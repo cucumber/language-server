@@ -3,7 +3,7 @@ import fs from 'fs/promises'
 import { relative } from 'path'
 import url from 'url'
 
-import { Files } from '../Files'
+import { Files } from '../Files.js'
 
 export class NodeFiles implements Files {
   constructor(private readonly rootUri: string) {}
