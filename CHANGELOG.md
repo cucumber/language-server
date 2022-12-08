@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.4.0] - 2022-12-08
 ### Added
 - Added support for JavaScript - [#42](https://github.com/cucumber/language-service/issues/42), [#115](https://github.com/cucumber/language-service/pull/115), [#120](https://github.com/cucumber/language-service/pull/120)
 
@@ -234,7 +235,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/cucumber/language-server/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/cucumber/language-server/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/cucumber/language-server/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/cucumber/language-server/compare/v1.1.0...v1.1.1
