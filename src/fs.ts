@@ -3,6 +3,7 @@ import { LanguageName, Source } from '@cucumber/language-service'
 import { extname, Files } from './Files.js'
 
 export const glueExtByLanguageName: Record<LanguageName, string[]> = {
+  javascript: ['.js', '.jsx'],
   tsx: ['.ts', '.tsx'],
   java: ['.java'],
   c_sharp: ['.cs'],

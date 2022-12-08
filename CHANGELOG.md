@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Added support for JavaScript - [#42](https://github.com/cucumber/language-service/issues/42), [#115](https://github.com/cucumber/language-service/pull/115), [#120](https://github.com/cucumber/language-service/pull/120)
+
+### Fixed
+- Fixed a regression in the python language implementation for regexes [#119](https://github.com/cucumber/language-service/pull/119)
+
 ## [1.3.0] - 2022-11-28
 ### Added
 - Expose `registry` and `expressions` [#73](https://github.com/cucumber/language-server/pull/73).
