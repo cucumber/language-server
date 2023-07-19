@@ -109,73 +109,80 @@ describe('CucumberLanguageServer', () => {
   })
 
   context('textDocument/completion', () => {
-    it('returns completion items for typescript', async () => {
-      // First we need to configure the server, telling it where to find Gherkin documents and Glue code.
-      // Note that *pushing* settings from the client to the server is deprecated in the LSP. We're only using it
-      // here because it's easier to implement in the test.
-      const settings: Settings = {
-        features: ['testdata/**/*.feature'],
-        glue: ['testdata/**/*.ts'],
-        parameterTypes: [],
-        snippetTemplates: {},
-      }
-      const configParams: DidChangeConfigurationParams = {
-        settings,
-      }
-      await clientConnection.sendNotification(DidChangeConfigurationNotification.type, configParams)
+    const typescriptFileExtensions = ['ts', 'cts', 'mts']
 
-      // TODO: Wait for a WorkDoneProgressEnd notification instead
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+    typescriptFileExtensions.forEach((fileExtension) =>
+      it(`returns completion items for *.${fileExtension} typescript files`, async () => {
+        // First we need to configure the server, telling it where to find Gherkin documents and Glue code.
+        // Note that *pushing* settings from the client to the server is deprecated in the LSP. We're only using it
+        // here because it's easier to implement in the test.
+        const settings: Settings = {
+          features: ['testdata/**/*.feature'],
+          glue: [`testdata/**/*.${fileExtension}`],
+          parameterTypes: [],
+          snippetTemplates: {},
+        }
+        const configParams: DidChangeConfigurationParams = {
+          settings,
+        }
+        await clientConnection.sendNotification(
+          DidChangeConfigurationNotification.type,
+          configParams
+        )
 
-      // Create a document for auto completion
-      documents.get = () =>
-        TextDocument.create(
-          'testdoc',
-          'gherkin',
-          1,
-          `Feature: Hello
+        // TODO: Wait for a WorkDoneProgressEnd notification instead
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+
+        // Create a document for auto completion
+        documents.get = () =>
+          TextDocument.create(
+            'testdoc',
+            'gherkin',
+            1,
+            `Feature: Hello
   Scenario: World
     Given I have
     `
+          )
+        const completionParams: CompletionParams = {
+          textDocument: {
+            uri: 'features/test.feature',
+          },
+          position: {
+            line: 2, // The step line
+            character: 16, // End of the step line
+          },
+        }
+        const completionItems = await clientConnection.sendRequest(
+          CompletionRequest.type,
+          completionParams
         )
-      const completionParams: CompletionParams = {
-        textDocument: {
-          uri: 'features/test.feature',
-        },
-        position: {
-          line: 2, // The step line
-          character: 16, // End of the step line
-        },
-      }
-      const completionItems = await clientConnection.sendRequest(
-        CompletionRequest.type,
-        completionParams
-      )
-      const expected: CompletionItem[] = [
-        {
-          label: 'I have {int} cukes',
-          filterText: 'I have',
-          sortText: '1000',
-          insertTextFormat: InsertTextFormat.Snippet,
-          kind: CompletionItemKind.Text,
-          labelDetails: {},
-          textEdit: {
-            newText: 'I have ${1|5,8|} cukes',
-            range: {
-              start: {
-                line: 2,
-                character: 10,
-              },
-              end: {
-                line: 2,
-                character: 16,
+        const expected: CompletionItem[] = [
+          {
+            label: 'I have {int} cukes',
+            filterText: 'I have',
+            sortText: '1000',
+            insertTextFormat: InsertTextFormat.Snippet,
+            kind: CompletionItemKind.Text,
+            labelDetails: {},
+            textEdit: {
+              newText: 'I have ${1|5,8|} cukes',
+              range: {
+                start: {
+                  line: 2,
+                  character: 10,
+                },
+                end: {
+                  line: 2,
+                  character: 16,
+                },
               },
             },
           },
-        },
-      ]
-      assert.deepStrictEqual(completionItems, expected)
-    })
+        ]
+        assert.deepStrictEqual(completionItems, expected)
+      })
+    )
   })
 })
 
