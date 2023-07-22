@@ -109,10 +109,20 @@ describe('CucumberLanguageServer', () => {
   })
 
   context('textDocument/completion', () => {
-    const typescriptFileExtensions = ['ts', 'cts', 'mts']
+    const fileExtensions = [
+      // Javascript
+      'js',
+      'cjs',
+      'mjs',
 
-    typescriptFileExtensions.forEach((fileExtension) =>
-      it(`returns completion items for *.${fileExtension} typescript files`, async () => {
+      // Typescript
+      'ts',
+      'cts',
+      'mts',
+    ]
+
+    fileExtensions.forEach((fileExtension) =>
+      it(`returns completion items for *.${fileExtension} files`, async () => {
         // First we need to configure the server, telling it where to find Gherkin documents and Glue code.
         // Note that *pushing* settings from the client to the server is deprecated in the LSP. We're only using it
         // here because it's easier to implement in the test.
