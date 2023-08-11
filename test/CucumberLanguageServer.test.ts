@@ -50,7 +50,7 @@ describe('CucumberLanguageServer', () => {
 
     const initializeParams: InitializeParams = {
       rootUri: `file://${process.cwd()}`,
-      processId: 'N/A' as unknown as number, // This id is used by vscode-languageserver. Forcing this to be a string so that the watchdog responsible for watching this process does not run.
+      processId: NaN, // This id is used by vscode-languageserver. Set as NaN so that the watchdog responsible for watching this process does not run.
       capabilities: {
         workspace: {
           configuration: true,
