@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Fixed c-sharp glob paths for step definitions and feature files - [#89](https://github.com/cucumber/language-server/pull/89)
+
 ### Added
 - Allow Javascript/Typescript glue files with the following file extensions: cjs, mjs, cts, mts - [#85](https://github.com/cucumber/language-server/pull/85)
 

@@ -54,7 +54,7 @@ const defaultSettings: Settings = {
     // Pytest-BDD
     'tests/**/*.feature',
     // SpecFlow
-    '*specs*/**/.feature',
+    '*specs*/**/*.feature',
   ],
   glue: [
     // Cucumber-JVM
@@ -64,9 +64,9 @@ const defaultSettings: Settings = {
     'features/**/*.tsx',
     'features/**/*.js',
     'features/**/*.jsx',
-    // Behave
-    'features/**/*.php',
     // Behat
+    'features/**/*.php',
+    // Behave
     'features/**/*.py',
     // Pytest-BDD
     'tests/**/*.py',
@@ -76,7 +76,7 @@ const defaultSettings: Settings = {
     // Cucumber-Ruby
     'features/**/*.rb',
     // SpecFlow
-    '*specs*/**/.cs',
+    '*specs*/**/*.cs',
   ],
   parameterTypes: [],
   snippetTemplates: {},
