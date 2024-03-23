@@ -2,6 +2,9 @@
   "name": "@cucumber/language-server",
   "version": "1.4.0",
   "description": "Cucumber Language Server",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "type": "module",
   "main": "dist/cjs/src/index.js",
   "module": "dist/esm/src/index.js",
