@@ -3,6 +3,5 @@
   "extends": [
     "github>cucumber/renovate-config",
     ":automergeMajor"
-  ],
-  "dependencyDashboard": true
+  ]
 }
