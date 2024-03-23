@@ -14,8 +14,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Allow Javascript/Typescript glue files with the following file extensions: cjs, mjs, cts, mts - [#85](https://github.com/cucumber/language-server/pull/85)
 
-### Changed
-
 ## [1.4.0] - 2022-12-08
 ### Added
 - Added support for JavaScript - [#42](https://github.com/cucumber/language-service/issues/42), [#115](https://github.com/cucumber/language-service/pull/115), [#120](https://github.com/cucumber/language-service/pull/120)
