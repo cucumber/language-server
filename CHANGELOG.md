@@ -7,13 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.5.0] - 2024-03-26
+### Added
+- Allow Javascript/Typescript glue files with the following file extensions: cjs, mjs, cts, mts - [#85](https://github.com/cucumber/language-server/pull/85)
+
 ### Fixed
 - Fixed c-sharp glob paths for step definitions and feature files - [#89](https://github.com/cucumber/language-server/pull/89)
 - Specify minimum supported node version ([#100](https://github.com/cucumber/language-server/pull/100))
 - Fixed the issue preventing standalone operation outside of VS Code - [#74](https://github.com/cucumber/language-server/pull/74)
-
-### Added
-- Allow Javascript/Typescript glue files with the following file extensions: cjs, mjs, cts, mts - [#85](https://github.com/cucumber/language-server/pull/85)
 
 ## [1.4.0] - 2022-12-08
 ### Added
@@ -243,7 +244,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/cucumber/language-server/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/cucumber/language-server/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/cucumber/language-server/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/cucumber/language-server/compare/v1.1.1...v1.2.0
