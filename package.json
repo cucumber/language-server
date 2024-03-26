@@ -52,12 +52,15 @@
   },
   "keywords": [
     "cucumber",
+    "gherkin",
     "lsp"
   ],
   "author": "Cucumber Limited <cukes@googlegroups.com>",
   "contributors": [
     "Aslak Hellesøy <aslak.hellesoy@gmail.com>",
     "Aurélien Reeves <aurelien.reeves@smartbear.com>",
+    "Binh Duc Tran <binhtran432k@gmail.com>",
+    "Kieran Ryan <kierankilkenny@gmail.com>",
     "William Boman <william@redwill.se>"
   ],
   "license": "MIT",
