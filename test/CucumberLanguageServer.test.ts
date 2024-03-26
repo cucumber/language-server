@@ -1,7 +1,7 @@
 import { WasmParserAdapter } from '@cucumber/language-service/wasm'
 import assert from 'assert'
 import { Duplex } from 'stream'
-import { Logger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node'
+import { NullLogger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node'
 import {
   Connection,
   createProtocolConnection,
@@ -80,11 +80,10 @@ describe('CucumberLanguageServer', () => {
       },
       workspaceFolders: null,
     }
-    const logger = new NullLogger()
     clientConnection = createProtocolConnection(
       new StreamMessageReader(outputStream),
       new StreamMessageWriter(inputStream),
-      logger
+      NullLogger
     )
     clientConnection.onError((err) => {
       console.error('ERROR', err)
@@ -203,24 +202,6 @@ class TestStream extends Duplex {
   }
 
   _read() {
-    // no-op
-  }
-}
-
-class NullLogger implements Logger {
-  error(): void {
-    // no-op
-  }
-
-  warn(): void {
-    // no-op
-  }
-
-  info(): void {
-    // no-op
-  }
-
-  log(): void {
     // no-op
   }
 }

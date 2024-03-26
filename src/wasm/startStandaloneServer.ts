@@ -12,4 +12,8 @@ export function startStandaloneServer(wasmBaseUrl: string, makeFiles: (rootUri: 
   const documents = new TextDocuments(TextDocument)
   new CucumberLanguageServer(connection, documents, adapter, makeFiles, () => undefined)
   connection.listen()
+
+  return {
+    connection,
+  }
 }

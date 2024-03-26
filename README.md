@@ -22,3 +22,9 @@ provide them.
 The server retrieves `cucumber.*` settings from the client with a [workspace/configuration](https://microsoft.github.io/language-server-protocol/specification#workspace_configuration) request.
 
 See [Settings](https://github.com/cucumber/language-server/blob/main/src/types.ts) for details about the expected format.
+
+## External VSCode Usage
+
+We've encountered an issue with the Node version used by [Treesitter](https://github.com/tree-sitter/tree-sitter/issues/2338), a
+dependency of this language server, when working outside of VSCode. For optimal
+compatibility, please use the same Node version as version 18 of VSCode.
