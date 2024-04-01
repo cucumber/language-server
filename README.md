@@ -33,6 +33,14 @@ Provides most of the functionality offered by the
 See [Cucumber Language Service](https://github.com/cucumber/language-service), which implements most of the logic in this server.
 If you are looking to add a new feature, you should probably add it to [Cucumber Language Service](https://github.com/cucumber/language-service).
 
+## Install
+
+Cucumber Language Server is [available on npm](https://www.npmjs.com/package/@cucumber/language-server):
+
+```console
+npm install @cucumber/language-server
+```
+
 ### Settings
 
 The LSP client can provide settings to the server, but the server provides [reasonable defaults](https://github.com/cucumber/language-server/blob/main/src/CucumberLanguageServer.ts) (see `defaultSettings`) if the client does not
@@ -47,3 +55,7 @@ See [Settings](https://github.com/cucumber/language-server/blob/main/src/types.t
 We've encountered an issue with the Node version used by [Treesitter](https://github.com/tree-sitter/tree-sitter/issues/2338), a
 dependency of this language server, when working outside of VSCode. For optimal
 compatibility, please use the same Node version as version 18 of VSCode.
+
+## Support
+
+Support is [available from the community](https://cucumber.io/tools/cucumber-open/support/) if you need it.
