@@ -1,17 +1,36 @@
-[![test-javascript](https://github.com/cucumber/language-server/actions/workflows/test-javascript.yml/badge.svg)](https://github.com/cucumber/language-server/actions/workflows/test-javascript.yml)
+<h1 align="center">
+  <img src="https://raw.githubusercontent.com/cucumber/cucumber-js/7df2c9b4f04099b81dc5c00cd73b404401cd6e46/docs/images/logo.svg" alt="">
+  <br>
+  Cucumber Language Server
+</h1>
+<p align="center">
+  <b>A <a href="https://langserver.org/">Language Server</a> for Cucumber</b>
+</p>
 
-# Cucumber Language Server
+<p align="center">
+  <a href="https://www.npmjs.com/package/@cucumber/language-server">
+    <img src="https://img.shields.io/npm/v/@cucumber/language-server.svg?color=dark-green" alt="npm">
+  </a>
+  <a href="https://github.com/cucumber/language-server/actions/workflows/test-javascript.yml">
+    <img src="https://github.com/cucumber/language-server/actions/workflows/test-javascript.yml/badge.svg" alt="test-javascript-package">
+  </a>
+  <a href="https://github.com/cucumber/language-server/actions/workflows/release-github.yml">
+    <img src="https://github.com/cucumber/language-server/actions/workflows/release-github.yml/badge.svg" alt="release-package-github">
+  </a>
+  <a href="https://opencollective.com/cucumber">
+    <img src="https://opencollective.com/cucumber/backers/badge.svg" alt="backers">
+  </a>
+  <a href="https://opencollective.com/cucumber">
+    <img src="https://opencollective.com/cucumber/sponsors/badge.svg" alt="sponsors">
+  </a>
+</p>
 
-A [Language Server](https://langserver.org/) for Cucumber.
+Provides most of the functionality offered by the
+[Cucumber Visual Studio Code Extension](https://github.com/cucumber/vscode) and can also be utilised with other editors that support the Language Server Protocol (LSP).
 
-This language server provides most of the functionality offered by the
-[Cucumber Visual Studio Code Extension](https://github.com/cucumber/vscode).
+## Features
 
-It may also be used to power other LSP editors.
-
-## Supported features
-
-See [Cucumber Language Service](https://github.com/cucumber/language-service), which implements most of the logic in this server. 
+See [Cucumber Language Service](https://github.com/cucumber/language-service), which implements most of the logic in this server.
 If you are looking to add a new feature, you should probably add it to [Cucumber Language Service](https://github.com/cucumber/language-service).
 
 ### Settings
