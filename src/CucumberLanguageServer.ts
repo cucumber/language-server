@@ -78,7 +78,7 @@ const defaultSettings: Settings = {
     // SpecFlow
     '*specs*/**/*.cs',
     // Godog
-    'features/**/*.go',
+    'features/**/*_test.go',
   ],
   parameterTypes: [],
   snippetTemplates: {},
