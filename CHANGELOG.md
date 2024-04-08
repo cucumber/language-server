@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- (Go) Support for Godog step definitions ([#106](https://github.com/cucumber/language-server/pull/106))
 
 ## [1.5.0] - 2024-03-26
 ### Added

@@ -49,7 +49,7 @@ const defaultSettings: Settings = {
   features: [
     // Cucumber-JVM
     'src/test/**/*.feature',
-    // Cucumber-Ruby, Cucumber-Js, Behat, Behave
+    // Cucumber-Ruby, Cucumber-Js, Behat, Behave, Godog
     'features/**/*.feature',
     // Pytest-BDD
     'tests/**/*.feature',
@@ -77,6 +77,8 @@ const defaultSettings: Settings = {
     'features/**/*.rb',
     // SpecFlow
     '*specs*/**/*.cs',
+    // Godog
+    'features/**/*_test.go',
   ],
   parameterTypes: [],
   snippetTemplates: {},
