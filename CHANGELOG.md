@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [1.6.0] - 2024-04-21
 ### Added
 - (Go) Support for Godog step definitions ([#106](https://github.com/cucumber/language-server/pull/106))
 
@@ -246,7 +248,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/cucumber/language-server/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/cucumber/language-server/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/cucumber/language-server/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/cucumber/language-server/compare/v1.2.0...v1.3.0
