@@ -385,7 +385,7 @@ export class CucumberLanguageServer {
           features: getArray(settings?.features, defaultSettings.features),
           glue: getArray(settings?.glue, defaultSettings.glue),
           parameterTypes: getArray(settings?.parameterTypes, defaultSettings.parameterTypes),
-          snippetTemplates: {},
+          snippetTemplates: settings?.snippetTemplates || {},
         }
       } else {
         this.connection.console.error(
