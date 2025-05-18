@@ -1,6 +1,6 @@
 {
   "name": "@cucumber/language-server",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Cucumber Language Server",
   "engines": {
     "node": ">=16.0.0"
