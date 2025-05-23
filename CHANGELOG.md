@@ -11,7 +11,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Update dependency @cucumber/language-service to 1.7.0
 
-## [1.6.1] - 2024-09-03
 ### Fixed
 - User's `snippetTemplates` config is ignored
 
