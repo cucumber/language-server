@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Update dependency @cucumber/language-service to 1.7.0
 
+### Fixed
+- User's `snippetTemplates` config is ignored
+
 ## [1.6.0] - 2024-04-21
 ### Added
 - (Go) Support for Godog step definitions ([#106](https://github.com/cucumber/language-server/pull/106))
