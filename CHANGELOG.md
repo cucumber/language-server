@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- User's `snippetTemplates` config is ignored
 
 ## [1.7.0] - 2025-05-18
 ### Changed
