@@ -102,6 +102,7 @@ describe('Standalone', () => {
         glue: ['testdata/**/*.js'],
         parameterTypes: [],
         snippetTemplates: {},
+        forceReindex: true,
       }
       const configParams: DidChangeConfigurationParams = {
         settings,

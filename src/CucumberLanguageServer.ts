@@ -82,6 +82,7 @@ const defaultSettings: Settings = {
   ],
   parameterTypes: [],
   snippetTemplates: {},
+  forceReindex: true,
 }
 
 export class CucumberLanguageServer {
@@ -386,6 +387,7 @@ export class CucumberLanguageServer {
           glue: getArray(settings?.glue, defaultSettings.glue),
           parameterTypes: getArray(settings?.parameterTypes, defaultSettings.parameterTypes),
           snippetTemplates: {},
+          forceReindex: settings?.forceReindex ?? defaultSettings.forceReindex,
         }
       } else {
         this.connection.console.error(

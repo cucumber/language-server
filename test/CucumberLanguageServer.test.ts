@@ -130,6 +130,7 @@ describe('CucumberLanguageServer', () => {
           glue: [`testdata/**/*.${fileExtension}`],
           parameterTypes: [],
           snippetTemplates: {},
+          forceReindex: true,
         }
         const configParams: DidChangeConfigurationParams = {
           settings,

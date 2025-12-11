@@ -10,4 +10,5 @@ export type Settings = {
   glue: readonly string[]
   parameterTypes: readonly ParameterTypeMeta[]
   snippetTemplates: Readonly<Partial<Record<LanguageName, string>>>
+  forceReindex: boolean
 }
