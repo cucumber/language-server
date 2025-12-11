@@ -12,8 +12,10 @@ import {
   getStepDefinitionLocationLinks,
   Index,
   jsSearchIndex,
+  LanguageName,
   ParserAdapter,
   semanticTokenTypes,
+  Source,
   Suggestion,
 } from '@cucumber/language-service'
 import {
@@ -92,6 +94,10 @@ export class CucumberLanguageServer {
   private reindexingTimeout: NodeJS.Timeout
   private rootUri: string
   private files: Files
+  private gherkinSourcesCache: Map<string, Source<'gherkin'>> = new Map()
+  private glueSourcesCache: Map<string, Source<LanguageName>> = new Map()
+  private stepTextsCache: Map<string, readonly string[]> = new Map()
+  private glueSourceChanged = true
   public registry: CucumberExpressions.ParameterTypeRegistry
   public expressions: readonly CucumberExpressions.Expression[] = []
   public suggestions: readonly Suggestion[] = []
@@ -298,9 +304,17 @@ export class CucumberLanguageServer {
 
     // The content of a text document has changed. This event is emitted
     // when the text document is first opened or when its content has changed.
-    documents.onDidChangeContent(async (change) => {
-      this.scheduleReindexing()
-      if (change.document.uri.match(/\.feature$/)) {
+    documents.onDidSave(async (change) => {
+      const uri = change.document.uri
+      const content = change.document.getText()
+      this.updateSourceCache(uri, content)
+      const settings = await this.getSettings()
+      if (!settings.forceReindex) {
+        this.connection.console.info('SKIPPING reindexing due to cucumber.forceReindex setting')
+        return
+      }
+      this.scheduleReindexing(true)
+      if (uri.match(/\.feature$/)) {
         await this.sendDiagnostics(change.document)
       }
     })
@@ -359,15 +373,30 @@ export class CucumberLanguageServer {
     })
   }
 
-  private scheduleReindexing() {
+  private scheduleReindexing(useCache = false) {
     clearTimeout(this.reindexingTimeout)
     const timeoutMillis = 3000
     this.connection.console.info(`Scheduling reindexing in ${timeoutMillis} ms`)
     this.reindexingTimeout = setTimeout(() => {
-      this.reindex().catch((err) =>
+      this.reindex(undefined, useCache).catch((err) =>
         this.connection.console.error(`Failed to reindex: ${err.message}`)
       )
     }, timeoutMillis)
+  }
+
+  private updateSourceCache(uri: string, content: string): void {
+    const ext = extname(uri)
+    if (ext === '.feature') {
+      this.gherkinSourcesCache.set(uri, { languageName: 'gherkin', uri, content })
+      // Update stepTexts cache for this file only
+      this.stepTextsCache.set(uri, buildStepTexts(content))
+    } else {
+      const languageName = getLanguage(ext)
+      if (languageName) {
+        this.glueSourcesCache.set(uri, { languageName, uri, content })
+        this.glueSourceChanged = true
+      }
+    }
   }
 
   private async getSettings(): Promise<Settings> {
@@ -403,31 +432,74 @@ export class CucumberLanguageServer {
     }
   }
 
-  private async reindex(settings?: Settings) {
+  private async reindex(settings?: Settings, useCache = false) {
     if (!settings) {
       settings = await this.getSettings()
     }
     // TODO: Send WorkDoneProgressBegin notification
     // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
 
-    this.connection.console.info(`Reindexing ${this.rootUri}`)
-    const gherkinSources = await loadGherkinSources(this.files, settings.features)
+    this.connection.console.info(`Reindexing ${this.rootUri}, useCache: ${useCache}`)
+
+    let gherkinSources: readonly Source<'gherkin'>[]
+    let glueSources: readonly Source<LanguageName>[]
+
+    if (useCache && this.gherkinSourcesCache.size > 0) {
+      gherkinSources = Array.from(this.gherkinSourcesCache.values())
+      glueSources = Array.from(this.glueSourcesCache.values())
+      this.connection.console.info(`* Using cached sources`)
+    } else {
+      gherkinSources = await loadGherkinSources(this.files, settings.features)
+      glueSources = await loadGlueSources(this.files, settings.glue)
+      // Populate caches
+      this.gherkinSourcesCache.clear()
+      this.glueSourcesCache.clear()
+      for (const source of gherkinSources) {
+        this.gherkinSourcesCache.set(source.uri, source)
+      }
+      for (const source of glueSources) {
+        this.glueSourcesCache.set(source.uri, source)
+      }
+    }
+
     this.connection.console.info(
       `* Found ${gherkinSources.length} feature file(s) in ${JSON.stringify(settings.features)}`
     )
-    const stepTexts = gherkinSources.reduce<readonly string[]>(
-      (prev, gherkinSource) => prev.concat(buildStepTexts(gherkinSource.content)),
-      []
-    )
+
+    // Build stepTexts using cache when possible
+    let stepTexts: readonly string[]
+    if (useCache && this.stepTextsCache.size > 0) {
+      // Merge all cached stepTexts
+      stepTexts = Array.from(this.stepTextsCache.values()).flat()
+      this.connection.console.info(`* Using cached stepTexts`)
+    } else {
+      // Build stepTexts for each gherkin source and populate cache
+      this.stepTextsCache.clear()
+      const allStepTexts: string[] = []
+      for (const source of gherkinSources) {
+        const fileStepTexts = buildStepTexts(source.content)
+        this.stepTextsCache.set(source.uri, fileStepTexts)
+        allStepTexts.push(...fileStepTexts)
+      }
+      stepTexts = allStepTexts
+    }
+
     this.connection.console.info(`* Found ${stepTexts.length} steps in those feature files`)
-    const glueSources = await loadGlueSources(this.files, settings.glue)
     this.connection.console.info(
       `* Found ${glueSources.length} glue file(s) in ${JSON.stringify(settings.glue)}`
     )
-    this.expressionBuilderResult = this.expressionBuilder.build(
-      glueSources,
-      settings.parameterTypes
-    )
+
+    // Only rebuild expressions if glue sources changed or we don't have a result yet
+    if (this.glueSourceChanged || !this.expressionBuilderResult) {
+      this.expressionBuilderResult = this.expressionBuilder.build(
+        glueSources,
+        settings.parameterTypes
+      )
+      this.glueSourceChanged = false
+      this.connection.console.info(`* Rebuilt expressions from glue sources`)
+    } else {
+      this.connection.console.info(`* Using cached expressions (no glue changes)`)
+    }
     this.connection.console.info(
       `* Found ${this.expressionBuilderResult.parameterTypeLinks.length} parameter types in those glue files`
     )
