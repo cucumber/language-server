@@ -300,6 +300,18 @@ export class CucumberLanguageServer {
       this.reindex().catch((err) => connection.console.error(err.message))
     })
 
+    // Handle custom force reindex request from client
+    connection.onRequest('cucumber/forceReindex', async () => {
+      connection.console.info('Received cucumber/forceReindex request')
+      try {
+        await this.reindex(undefined, false)
+        return { success: true }
+      } catch (err) {
+        connection.console.error(`Force reindex failed: ${err.message}`)
+        return { success: false, error: err.message }
+      }
+    })
+
     documents.listen(connection)
 
     // The content of a text document has changed. This event is emitted
