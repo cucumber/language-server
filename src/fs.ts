@@ -73,6 +73,59 @@ export async function findUris(files: Files, globs: readonly string[]): Promise<
   return [...new Set(uris).values()].sort()
 }
 
+export interface TextDocument {
+  uri: string
+  content: string
+}
+
+async function updateSourceInternal<L>(
+  document: TextDocument,
+  files: Files,
+  sourcesCacheMap: SourceCache<L>,
+  languageName: L
+): Promise<Source<L>> {
+  const content = await files.readFile(document.uri)
+  const digest = computeDigest(content)
+
+  if (sourcesCacheMap.has(document.uri)) {
+    const cached = sourcesCacheMap.get(document.uri)
+    if (cached && cached.digest === digest) {
+      return cached.source
+    }
+  }
+
+  const source: Source<L> = {
+    languageName,
+    uri: document.uri,
+    content,
+  }
+
+  sourcesCacheMap.set(document.uri, { source, digest })
+  return source
+}
+
+export async function updateGherkinSource(
+  document: TextDocument,
+  files: Files,
+  sourcesCacheMap: SourceCache<'gherkin'>
+): Promise<Source<'gherkin'>> {
+  return updateSourceInternal(document, files, sourcesCacheMap, 'gherkin')
+}
+
+export async function updateGlueSource(
+  document: TextDocument,
+  files: Files,
+  sourcesCacheMap: SourceCache<LanguageName>
+): Promise<Source<LanguageName>> {
+  const ext = extname(document.uri)
+  const languageName = getLanguage(ext)
+  if (!languageName) {
+    throw new Error(`Unsupported glue file extension: ${ext} for ${document.uri}`)
+  }
+
+  return updateSourceInternal(document, files, sourcesCacheMap, languageName)
+}
+
 async function loadSources<L>(
   files: Files,
   globs: readonly string[],

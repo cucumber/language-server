@@ -18,6 +18,7 @@ import {
   Source,
   Suggestion,
 } from '@cucumber/language-service'
+import * as micromatch from 'micromatch'
 import {
   CodeAction,
   CodeActionKind,
@@ -32,7 +33,14 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { buildStepTexts } from './buildStepTexts.js'
 import { extname, Files } from './Files.js'
-import { getLanguage, loadGherkinSources, loadGlueSources, SourceCache } from './fs.js'
+import {
+  getLanguage,
+  loadGherkinSources,
+  loadGlueSources,
+  SourceCache,
+  updateGherkinSource,
+  updateGlueSource,
+} from './fs.js'
 import { getStepDefinitionSnippetLinks } from './getStepDefinitionSnippetLinks.js'
 import { Settings } from './types.js'
 import { version } from './version.js'
@@ -422,6 +430,14 @@ export class CucumberLanguageServer {
     }
   }
 
+  private async getCachedGherkinSources(): Promise<readonly Source<'gherkin'>[]> {
+    return Array.from(this.gherkinSourcesCacheMap.values()).map((entry) => entry.source)
+  }
+
+  private async getCachedGlueSources(): Promise<readonly Source<LanguageName>[]> {
+    return Array.from(this.glueSourcesCacheMap.values()).map((entry) => entry.source)
+  }
+
   private async reindex(document?: TextDocument, settings?: Settings) {
     if (!settings) {
       settings = await this.getSettings()
@@ -432,15 +448,23 @@ export class CucumberLanguageServer {
     this.connection.console.info(`Reindexing ${this.rootUri}`)
     this.connection.console.info(`Settings: ${JSON.stringify(settings, null, 2)}`)
     this.connection.console.info(`Files: ${JSON.stringify(this.files, null, 2)}`)
-    let gherkinSources: readonly Source<'gherkin'>[] = []
-    if (this.gherkinSourcesCacheMap.size === 0) {
+
+    if (document) {
+      if (document.uri.match(/\.feature$/)) {
+        this.connection.console.info(`Updating gherkin source ${document.uri}`)
+        updateGherkinSource(
+          { uri: document.uri, content: document.getText() },
+          this.files,
+          this.gherkinSourcesCacheMap
+        )
+      }
+    } else {
       this.connection.console.info(`Loading gherkin sources from scratch`)
-      gherkinSources = await loadGherkinSources(
-        this.files,
-        settings.features,
-        this.gherkinSourcesCacheMap
-      )
+      await loadGherkinSources(this.files, settings.features, this.gherkinSourcesCacheMap)
     }
+
+    const gherkinSources = await this.getCachedGherkinSources()
+
     this.connection.console.info(
       `* Found ${gherkinSources.length} feature file(s) in ${JSON.stringify(settings.features)}`
     )
@@ -453,11 +477,26 @@ export class CucumberLanguageServer {
     )
     this.connection.console.info(`* Found ${stepTexts.length} steps in those feature files`)
     this.connection.console.info(`* Steptexts sample: \n ${JSON.stringify(stepTexts[0], null, 2)}`)
-    this.connection.console.info(`Loading glue sources from scratch`)
-    let glueSources: readonly Source<LanguageName>[] = []
-    if (this.glueSourcesCacheMap.size === 0) {
-      glueSources = await loadGlueSources(this.files, settings.glue, this.glueSourcesCacheMap)
+
+    let newGlueSource: Source<LanguageName> | undefined = undefined
+    if (document) {
+      // Check if document.uri matches any of the glue glob patterns
+      const relativePath = this.files.relativePath(document.uri)
+
+      if (micromatch.isMatch(relativePath, settings.glue, { contains: true })) {
+        this.connection.console.info(`Updating glue source ${document.uri}`)
+        newGlueSource = await updateGlueSource(
+          { uri: document.uri, content: document.getText() },
+          this.files,
+          this.glueSourcesCacheMap
+        )
+      }
+    } else {
+      this.connection.console.info(`Loading glue sources from scratch`)
+      await loadGlueSources(this.files, settings.glue, this.glueSourcesCacheMap)
     }
+    const glueSources = await this.getCachedGlueSources()
+    this.connection.console.info(`DEBUG: newGlueSource: ${JSON.stringify(newGlueSource, null, 2)}`)
     this.connection.console.info(
       `* Found ${glueSources.length} glue file(s) in ${JSON.stringify(settings.glue)}`
     )
