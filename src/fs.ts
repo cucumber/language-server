@@ -1,4 +1,5 @@
 import { LanguageName, Source } from '@cucumber/language-service'
+import { createHash } from 'crypto'
 
 import { extname, Files } from './Files.js'
 
@@ -28,9 +29,11 @@ const glueExtensions = new Set(Object.keys(glueLanguageNameByExt))
 
 export async function loadGlueSources(
   files: Files,
-  globs: readonly string[]
+  globs: readonly string[],
+  cache: SourceCache<LanguageName> = new Map()
+  // changedFile?: TextDocument
 ): Promise<readonly Source<LanguageName>[]> {
-  return loadSources(files, globs, glueExtensions, glueLanguageNameByExt)
+  return loadSources(files, globs, glueExtensions, glueLanguageNameByExt, cache)
 }
 
 export function getLanguage(ext: string): LanguageName | undefined {
@@ -39,12 +42,24 @@ export function getLanguage(ext: string): LanguageName | undefined {
 
 export async function loadGherkinSources(
   files: Files,
-  globs: readonly string[]
+  globs: readonly string[],
+  cache: SourceCache<'gherkin'> = new Map()
 ): Promise<readonly Source<'gherkin'>[]> {
-  return loadSources(files, globs, new Set(['.feature']), { '.feature': 'gherkin' })
+  return loadSources(files, globs, new Set(['.feature']), { '.feature': 'gherkin' }, cache)
 }
 
 type LanguageNameByExt<L> = Record<string, L>
+
+export interface SourceCacheEntry<L> {
+  source: Source<L>
+  digest: string
+}
+
+export type SourceCache<L = unknown> = Map<string, SourceCacheEntry<L>>
+
+function computeDigest(content: string): string {
+  return createHash('sha256').update(content).digest('hex')
+}
 
 export async function findUris(files: Files, globs: readonly string[]): Promise<readonly string[]> {
   // Run all the globs in parallel
@@ -62,25 +77,34 @@ async function loadSources<L>(
   files: Files,
   globs: readonly string[],
   extensions: Set<string>,
-  languageNameByExt: LanguageNameByExt<L>
+  languageNameByExt: LanguageNameByExt<L>,
+  cache: SourceCache<L>
 ): Promise<readonly Source<L>[]> {
   const uris = await findUris(files, globs)
 
-  return Promise.all(
+  const sources = await Promise.all(
     uris
       .filter((uri) => extensions.has(extname(uri)))
       .map<Promise<Source<L>>>(
         (uri) =>
           new Promise<Source<L>>((resolve) => {
             const languageName = languageNameByExt[extname(uri)]
-            return files.readFile(uri).then((content) =>
-              resolve({
+            return files.readFile(uri).then((content) => {
+              const source: Source<L> = {
                 languageName,
                 content,
                 uri,
-              })
-            )
+              }
+
+              // Compute digest and store in cache
+              const digest = computeDigest(content)
+              cache.set(uri, { source, digest })
+
+              resolve(source)
+            })
           })
       )
   )
+
+  return sources
 }
