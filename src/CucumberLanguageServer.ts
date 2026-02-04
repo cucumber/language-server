@@ -104,7 +104,7 @@ export class CucumberLanguageServer {
   private files: Files
   private gherkinSourcesCacheMap: SourceCache<'gherkin'> = new Map()
   private glueSourcesCacheMap: SourceCache<LanguageName> = new Map()
-  private suggestionsCache: readonly Suggestion[] | undefined = undefined
+  private suggestionsCache: readonly Suggestion[] = []
   private expressionBuilderResultCache: ExpressionBuilderResult | undefined = undefined
   public registry: CucumberExpressions.ParameterTypeRegistry
   public expressions: readonly CucumberExpressions.Expression[] = []
@@ -471,12 +471,16 @@ export class CucumberLanguageServer {
     this.connection.console.info(
       `* Gherkin sources sample: \n ${JSON.stringify(gherkinSources[0].content, null, 2)}`
     )
-    const stepTexts = gherkinSources.reduce<readonly string[]>(
-      (prev, gherkinSource) => prev.concat(buildStepTexts(gherkinSource.content)),
-      []
+    const stepTexts = gherkinSources.reduce<Set<string>>((prev, gherkinSource) => {
+      for (const stepText of buildStepTexts(gherkinSource.content)) {
+        prev.add(stepText)
+      }
+      return prev
+    }, new Set<string>())
+    this.connection.console.info(`* Found ${stepTexts.size} steps in those feature files`)
+    this.connection.console.info(
+      `* Steptexts sample: \n ${JSON.stringify(stepTexts.values().next().value, null, 2)}`
     )
-    this.connection.console.info(`* Found ${stepTexts.length} steps in those feature files`)
-    this.connection.console.info(`* Steptexts sample: \n ${JSON.stringify(stepTexts[0], null, 2)}`)
 
     let newGlueSource: Source<LanguageName> | undefined = undefined
     if (document) {
@@ -509,6 +513,13 @@ export class CucumberLanguageServer {
       this.expressionBuilderResultCache = this.expressionBuilder.build(
         glueSources,
         settings.parameterTypes
+      )
+    }
+    if (newGlueSource) {
+      this.connection.console.info(`Adding new glue source to expression builder result`)
+      this.expressionBuilderResultCache = this.expressionBuilder.rebuild(
+        this.expressionBuilderResultCache,
+        [newGlueSource]
       )
     }
     this.expressionBuilderResult = this.expressionBuilderResultCache
@@ -547,14 +558,12 @@ export class CucumberLanguageServer {
 
     try {
       const expressions = this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
-      if (this.suggestionsCache === undefined) {
-        this.connection.console.info(`Building suggestions from scratch`)
-        this.suggestionsCache = buildSuggestions(
-          this.expressionBuilderResult.registry,
-          stepTexts,
-          expressions
-        )
-      }
+      this.connection.console.info(`Building suggestions from scratch`)
+      this.suggestionsCache = buildSuggestions(
+        this.expressionBuilderResult.registry,
+        stepTexts,
+        expressions
+      )
       const suggestions = this.suggestionsCache
       this.connection.console.info(`DEBUG: suggestions: ${JSON.stringify(suggestions[0], null, 2)}`)
       this.connection.console.info(`* Built ${suggestions.length} suggestions for auto complete`)
