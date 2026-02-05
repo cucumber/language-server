@@ -25,6 +25,7 @@ import {
   ConfigurationRequest,
   Connection,
   DidChangeConfigurationNotification,
+  LocationLink,
   ServerCapabilities,
   TextDocuments,
   TextDocumentSyncKind,
@@ -93,6 +94,7 @@ const defaultSettings: Settings = {
   parameterTypes: [],
   snippetTemplates: {},
   forceReindex: false,
+  buildSuggestions: true,
 }
 
 export class CucumberLanguageServer {
@@ -187,10 +189,7 @@ export class CucumberLanguageServer {
           const doc = documents.get(semanticTokenParams.textDocument.uri)
           if (!doc) return { data: [] }
           const gherkinSource = doc.getText()
-          return getGherkinSemanticTokens(
-            gherkinSource,
-            (this.expressionBuilderResult?.expressionLinks || []).map((l) => l.expression)
-          )
+          return getGherkinSemanticTokens(gherkinSource, this.getExpressionsFromLinks())
         })
       } else {
         connection.console.info('semanticTokens is disabled')
@@ -227,9 +226,7 @@ export class CucumberLanguageServer {
           const diagnostics = params.context.diagnostics
           if (this.expressionBuilderResult) {
             const settings = await this.getSettings()
-            const links = getStepDefinitionSnippetLinks(
-              this.expressionBuilderResult.expressionLinks.map((l) => l.locationLink)
-            )
+            const links = getStepDefinitionSnippetLinks(this.getLocationLinksFromLinks())
             if (links.length === 0) {
               connection.console.info(
                 `Unable to generate step definition. Please create one first manually.`
@@ -278,7 +275,7 @@ export class CucumberLanguageServer {
           return getStepDefinitionLocationLinks(
             gherkinSource,
             params.position,
-            this.expressionBuilderResult.expressionLinks
+            Array.from(this.expressionBuilderResult.expressionLinks.values()).flat()
           )
         })
       } else {
@@ -377,7 +374,7 @@ export class CucumberLanguageServer {
   private async sendDiagnostics(textDocument: TextDocument): Promise<void> {
     const diagnostics = getGherkinDiagnostics(
       textDocument.getText(),
-      (this.expressionBuilderResult?.expressionLinks || []).map((l) => l.expression)
+      this.getExpressionsFromLinks()
     )
     await this.connection.sendDiagnostics({
       uri: textDocument.uri,
@@ -387,8 +384,7 @@ export class CucumberLanguageServer {
 
   private scheduleReindexing(document: TextDocument) {
     clearTimeout(this.reindexingTimeout)
-    const timeoutMillis = 3000
-    this.connection.console.info(`DEBUG: change: ${JSON.stringify(document, null, 2)}`)
+    const timeoutMillis = 1000
     this.connection.console.info(`Scheduling reindexing in ${timeoutMillis} ms`)
     this.reindexingTimeout = setTimeout(() => {
       this.reindex(document).catch((err) =>
@@ -415,6 +411,7 @@ export class CucumberLanguageServer {
           parameterTypes: getArray(settings?.parameterTypes, defaultSettings.parameterTypes),
           snippetTemplates: settings?.snippetTemplates || {},
           forceReindex: settings?.forceReindex || false,
+          buildSuggestions: settings?.buildSuggestions || false,
         }
       } else {
         this.connection.console.error(
@@ -438,6 +435,18 @@ export class CucumberLanguageServer {
     return Array.from(this.glueSourcesCacheMap.values()).map((entry) => entry.source)
   }
 
+  private getExpressionsFromLinks(): readonly CucumberExpressions.Expression[] {
+    return Array.from(this.expressionBuilderResult?.expressionLinks.values() || []).flatMap(
+      (links) => links.map((l) => l.expression)
+    )
+  }
+
+  private getLocationLinksFromLinks(): readonly LocationLink[] {
+    return Array.from(this.expressionBuilderResult?.expressionLinks.values() || []).flatMap(
+      (links) => links.map((l) => l.locationLink)
+    )
+  }
+
   private async reindex(document?: TextDocument, settings?: Settings) {
     if (!settings) {
       settings = await this.getSettings()
@@ -447,7 +456,6 @@ export class CucumberLanguageServer {
 
     this.connection.console.info(`Reindexing ${this.rootUri}`)
     this.connection.console.info(`Settings: ${JSON.stringify(settings, null, 2)}`)
-    this.connection.console.info(`Files: ${JSON.stringify(this.files, null, 2)}`)
 
     if (document) {
       if (document.uri.match(/\.feature$/)) {
@@ -468,19 +476,13 @@ export class CucumberLanguageServer {
     this.connection.console.info(
       `* Found ${gherkinSources.length} feature file(s) in ${JSON.stringify(settings.features)}`
     )
-    this.connection.console.info(
-      `* Gherkin sources sample: \n ${JSON.stringify(gherkinSources[0].content, null, 2)}`
-    )
     const stepTexts = gherkinSources.reduce<Set<string>>((prev, gherkinSource) => {
       for (const stepText of buildStepTexts(gherkinSource.content)) {
         prev.add(stepText)
       }
       return prev
     }, new Set<string>())
-    this.connection.console.info(`* Found ${stepTexts.size} steps in those feature files`)
-    this.connection.console.info(
-      `* Steptexts sample: \n ${JSON.stringify(stepTexts.values().next().value, null, 2)}`
-    )
+    this.connection.console.info(`* Found ${stepTexts.size} unique steps in those feature files`)
 
     let newGlueSource: Source<LanguageName> | undefined = undefined
     if (document) {
@@ -500,12 +502,8 @@ export class CucumberLanguageServer {
       await loadGlueSources(this.files, settings.glue, this.glueSourcesCacheMap)
     }
     const glueSources = await this.getCachedGlueSources()
-    this.connection.console.info(`DEBUG: newGlueSource: ${JSON.stringify(newGlueSource, null, 2)}`)
     this.connection.console.info(
       `* Found ${glueSources.length} glue file(s) in ${JSON.stringify(settings.glue)}`
-    )
-    this.connection.console.info(
-      `* Glue sources sample: \n ${JSON.stringify(glueSources[0], null, 2)}`
     )
 
     if (this.expressionBuilderResultCache === undefined) {
@@ -524,7 +522,7 @@ export class CucumberLanguageServer {
     }
     this.expressionBuilderResult = this.expressionBuilderResultCache
     this.connection.console.info(
-      `* Found ${this.expressionBuilderResult.parameterTypeLinks.length} parameter types in those glue files`
+      `* Found ${this.expressionBuilderResult.parameterTypeLinks.size} parameter types in those glue files`
     )
     // for (const parameterTypeLink of this.expressionBuilderResult.parameterTypeLinks) {
     //   this.connection.console.info(
@@ -532,13 +530,7 @@ export class CucumberLanguageServer {
     //   )
     // }
     this.connection.console.info(
-      `* Parameter type links sample: \n ${JSON.stringify(this.expressionBuilderResult.parameterTypeLinks[0], null, 2)}`
-    )
-    this.connection.console.info(
-      `* Found ${this.expressionBuilderResult.expressionLinks.length} step definitions in those glue files`
-    )
-    this.connection.console.info(
-      `  Expression link: sample: \n ${JSON.stringify(this.expressionBuilderResult.expressionLinks[0], null, 2)}`
+      `* Found ${this.expressionBuilderResult.expressionLinks.size} step definitions in those glue files`
     )
     for (const error of this.expressionBuilderResult.errors) {
       this.connection.console.error(`* Step Definition errors: ${error.stack}`)
@@ -557,15 +549,16 @@ export class CucumberLanguageServer {
     this.connection.languages.semanticTokens.refresh()
 
     try {
-      const expressions = this.expressionBuilderResult.expressionLinks.map((l) => l.expression)
+      const expressions = this.getExpressionsFromLinks()
       this.connection.console.info(`Building suggestions from scratch`)
-      this.suggestionsCache = buildSuggestions(
-        this.expressionBuilderResult.registry,
-        stepTexts,
-        expressions
-      )
+      if (settings.buildSuggestions) {
+        this.suggestionsCache = buildSuggestions(
+          this.expressionBuilderResult.registry,
+          stepTexts,
+          expressions
+        )
+      }
       const suggestions = this.suggestionsCache
-      this.connection.console.info(`DEBUG: suggestions: ${JSON.stringify(suggestions[0], null, 2)}`)
       this.connection.console.info(`* Built ${suggestions.length} suggestions for auto complete`)
       this.searchIndex = jsSearchIndex(suggestions)
       const registry = this.expressionBuilderResult.registry
