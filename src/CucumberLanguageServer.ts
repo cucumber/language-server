@@ -106,7 +106,7 @@ export class CucumberLanguageServer {
   private files: Files
   private gherkinSourcesCacheMap: SourceCache<'gherkin'> = new Map()
   private glueSourcesCacheMap: SourceCache<LanguageName> = new Map()
-  private suggestionsCache: readonly Suggestion[] = []
+  private suggestionsCache: Map<string, Suggestion> = new Map()
   private expressionBuilderResultCache: ExpressionBuilderResult | undefined = undefined
   public registry: CucumberExpressions.ParameterTypeRegistry
   public expressions: readonly CucumberExpressions.Expression[] = []
@@ -447,6 +447,12 @@ export class CucumberLanguageServer {
     )
   }
 
+  private getNewExpressionsFromLinks(): readonly CucumberExpressions.Expression[] {
+    return Array.from(this.expressionBuilderResult?.newExpressionLinks.values() || []).flatMap(
+      (links) => links.map((l) => l.expression)
+    )
+  }
+
   private async reindex(document?: TextDocument, settings?: Settings) {
     if (!settings) {
       settings = await this.getSettings()
@@ -522,7 +528,7 @@ export class CucumberLanguageServer {
     }
     this.expressionBuilderResult = this.expressionBuilderResultCache
     this.connection.console.info(
-      `* Found ${this.expressionBuilderResult.parameterTypeLinks.size} parameter types in those glue files`
+      `* Found ${Array.from(this.expressionBuilderResult.parameterTypeLinks.values()).flat().length} parameter types in those glue files`
     )
     // for (const parameterTypeLink of this.expressionBuilderResult.parameterTypeLinks) {
     //   this.connection.console.info(
@@ -530,7 +536,7 @@ export class CucumberLanguageServer {
     //   )
     // }
     this.connection.console.info(
-      `* Found ${this.expressionBuilderResult.expressionLinks.size} step definitions in those glue files`
+      `* Found ${Array.from(this.expressionBuilderResult.expressionLinks.values()).flat().length} step definitions in those glue files`
     )
     for (const error of this.expressionBuilderResult.errors) {
       this.connection.console.error(`* Step Definition errors: ${error.stack}`)
@@ -550,15 +556,25 @@ export class CucumberLanguageServer {
 
     try {
       const expressions = this.getExpressionsFromLinks()
-      this.connection.console.info(`Building suggestions from scratch`)
-      if (settings.buildSuggestions) {
-        this.suggestionsCache = buildSuggestions(
+      if (newGlueSource && this.expressionBuilderResult.newExpressionLinks.size > 0) {
+        this.connection.console.info(`Building suggestions from new expressions`)
+        buildSuggestions(
           this.expressionBuilderResult.registry,
           stepTexts,
-          expressions
+          this.getNewExpressionsFromLinks(),
+          this.suggestionsCache,
+          false,
+        )
+      } else if (this.suggestionsCache.size === 0) {
+        this.connection.console.info(`Building suggestions from scratch`)
+        buildSuggestions(
+          this.expressionBuilderResult.registry,
+          stepTexts,
+          expressions,
+          this.suggestionsCache
         )
       }
-      const suggestions = this.suggestionsCache
+      const suggestions = Array.from(this.suggestionsCache.values())
       this.connection.console.info(`* Built ${suggestions.length} suggestions for auto complete`)
       this.searchIndex = jsSearchIndex(suggestions)
       const registry = this.expressionBuilderResult.registry
