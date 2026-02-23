@@ -131,7 +131,6 @@ describe('CucumberLanguageServer', () => {
           parameterTypes: [],
           snippetTemplates: {},
           forceReindex: true,
-          buildSuggestions: true,
         }
         const configParams: DidChangeConfigurationParams = {
           settings,

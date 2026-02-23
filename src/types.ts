@@ -11,5 +11,4 @@ export type Settings = {
   parameterTypes: readonly ParameterTypeMeta[]
   snippetTemplates: Readonly<Partial<Record<LanguageName, string>>>
   forceReindex: boolean
-  buildSuggestions: boolean
 }

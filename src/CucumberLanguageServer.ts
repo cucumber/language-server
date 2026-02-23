@@ -94,7 +94,6 @@ const defaultSettings: Settings = {
   parameterTypes: [],
   snippetTemplates: {},
   forceReindex: false,
-  buildSuggestions: true,
 }
 
 export class CucumberLanguageServer {
@@ -410,8 +409,7 @@ export class CucumberLanguageServer {
           glue: getArray(settings?.glue, defaultSettings.glue),
           parameterTypes: getArray(settings?.parameterTypes, defaultSettings.parameterTypes),
           snippetTemplates: settings?.snippetTemplates || {},
-          forceReindex: settings?.forceReindex || false,
-          buildSuggestions: settings?.buildSuggestions || false,
+          forceReindex: settings?.forceReindex || false
         }
       } else {
         this.connection.console.error(
@@ -428,11 +426,11 @@ export class CucumberLanguageServer {
   }
 
   private async getCachedGherkinSources(): Promise<readonly Source<'gherkin'>[]> {
-    return Array.from(this.gherkinSourcesCacheMap.values()).map((entry) => entry.source)
+    return Array.from(this.gherkinSourcesCacheMap.values())
   }
 
   private async getCachedGlueSources(): Promise<readonly Source<LanguageName>[]> {
-    return Array.from(this.glueSourcesCacheMap.values()).map((entry) => entry.source)
+    return Array.from(this.glueSourcesCacheMap.values())
   }
 
   private getExpressionsFromLinks(): readonly CucumberExpressions.Expression[] {

@@ -1,5 +1,4 @@
 import { LanguageName, Source } from '@cucumber/language-service'
-import { createHash } from 'crypto'
 
 import { extname, Files } from './Files.js'
 
@@ -50,16 +49,7 @@ export async function loadGherkinSources(
 
 type LanguageNameByExt<L> = Record<string, L>
 
-export interface SourceCacheEntry<L> {
-  source: Source<L>
-  digest: string
-}
-
-export type SourceCache<L = unknown> = Map<string, SourceCacheEntry<L>>
-
-function computeDigest(content: string): string {
-  return createHash('sha256').update(content).digest('hex')
-}
+export type SourceCache<L = unknown> = Map<string, Source<L>>
 
 export async function findUris(files: Files, globs: readonly string[]): Promise<readonly string[]> {
   // Run all the globs in parallel
@@ -85,14 +75,6 @@ async function updateSourceInternal<L>(
   languageName: L
 ): Promise<Source<L>> {
   const content = await files.readFile(document.uri)
-  const digest = computeDigest(content)
-
-  if (sourcesCacheMap.has(document.uri)) {
-    const cached = sourcesCacheMap.get(document.uri)
-    if (cached && cached.digest === digest) {
-      return cached.source
-    }
-  }
 
   const source: Source<L> = {
     languageName,
@@ -100,7 +82,7 @@ async function updateSourceInternal<L>(
     content,
   }
 
-  sourcesCacheMap.set(document.uri, { source, digest })
+  sourcesCacheMap.set(document.uri, source)
   return source
 }
 
@@ -149,9 +131,7 @@ async function loadSources<L>(
                 uri,
               }
 
-              // Compute digest and store in cache
-              const digest = computeDigest(content)
-              cache.set(uri, { source, digest })
+              cache.set(uri, source)
 
               resolve(source)
             })
