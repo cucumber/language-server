@@ -26,9 +26,14 @@ import {
   Connection,
   DidChangeConfigurationNotification,
   LocationLink,
+  ProgressToken,
   ServerCapabilities,
   TextDocuments,
   TextDocumentSyncKind,
+  WorkDoneProgress,
+  WorkDoneProgressBegin,
+  WorkDoneProgressEnd,
+  WorkDoneProgressReport,
 } from 'vscode-languageserver'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
@@ -453,11 +458,11 @@ export class CucumberLanguageServer {
     if (!settings) {
       settings = await this.getSettings()
     }
-    // TODO: Send WorkDoneProgressBegin notification
-    // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workDoneProgress
 
     this.connection.console.info(`Reindexing ${this.rootUri}`)
     this.connection.console.info(`Settings: ${JSON.stringify(settings, null, 2)}`)
+
+    const token: ProgressToken = `cucumber-index-${Date.now()}`
 
     if (document) {
       if (document.uri.match(/\.feature$/)) {
@@ -470,6 +475,15 @@ export class CucumberLanguageServer {
       }
     } else {
       this.connection.console.info(`Loading gherkin sources from scratch`)
+      await this.connection.sendRequest('window/workDoneProgress/create', { token })
+
+      const begin: WorkDoneProgressBegin = {
+        kind: 'begin',
+        title: 'Loading Gherkin Sources',
+        percentage: 10,
+      }
+      this.connection.sendProgress(WorkDoneProgress.type, token, begin)
+  
       await loadGherkinSources(this.files, settings.features, this.gherkinSourcesCacheMap)
     }
 
@@ -501,6 +515,13 @@ export class CucumberLanguageServer {
       }
     } else {
       this.connection.console.info(`Loading glue sources from scratch`)
+      const report: WorkDoneProgressReport = {
+        kind: 'report',
+        percentage: 25,
+        message: 'Loading glue sources',
+      }
+      this.connection.sendProgress(WorkDoneProgress.type, token, report)
+
       await loadGlueSources(this.files, settings.glue, this.glueSourcesCacheMap)
     }
     const glueSources = await this.getCachedGlueSources()
@@ -510,6 +531,13 @@ export class CucumberLanguageServer {
 
     if (this.expressionBuilderResultCache === undefined) {
       this.connection.console.info(`Building expression builder result from scratch`)
+      const report: WorkDoneProgressReport = {
+        kind: 'report',
+        percentage: 50,
+        message: `Building expressions from ${glueSources.length} glue files`,
+      }
+      this.connection.sendProgress(WorkDoneProgress.type, token, report)
+
       this.expressionBuilderResultCache = this.expressionBuilder.build(
         glueSources,
         settings.parameterTypes
@@ -522,6 +550,7 @@ export class CucumberLanguageServer {
         [newGlueSource]
       )
     }
+
     this.expressionBuilderResult = this.expressionBuilderResultCache
     this.connection.console.info(
       `* Found ${Array.from(this.expressionBuilderResult.parameterTypeLinks.values()).flat().length} parameter types in those glue files`
@@ -552,6 +581,7 @@ export class CucumberLanguageServer {
 
     try {
       const expressions = this.getExpressionsFromLinks()
+
       if (newGlueSource && this.expressionBuilderResult.newExpressionLinks.size > 0) {
         this.connection.console.info(`Building suggestions from new expressions`)
         buildSuggestions(
@@ -563,6 +593,13 @@ export class CucumberLanguageServer {
         )
       } else if (this.suggestionsCache.size === 0) {
         this.connection.console.info(`Building suggestions from scratch`)
+        const report: WorkDoneProgressReport = {
+          kind: 'report',
+          percentage: 75,
+          message: `Building ${stepTexts.size} suggestions`,
+        }
+        this.connection.sendProgress(WorkDoneProgress.type, token, report)
+
         buildSuggestions(
           this.expressionBuilderResult.registry,
           stepTexts,
@@ -585,7 +622,10 @@ export class CucumberLanguageServer {
       )
     }
 
-    // TODO: Send WorkDoneProgressEnd notification
+    const end: WorkDoneProgressEnd = {
+      kind: 'end',
+    }
+    this.connection.sendProgress(WorkDoneProgress.type, token, end)
   }
 }
 
