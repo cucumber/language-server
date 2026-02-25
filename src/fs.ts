@@ -12,6 +12,7 @@ export const glueExtByLanguageName: Record<LanguageName, string[]> = {
   python: ['.py'],
   rust: ['.rs'],
   go: ['.go'],
+  scala: ['.scala'],
 }
 
 type ExtLangEntry = [string, LanguageName]
@@ -27,9 +28,11 @@ const glueExtensions = new Set(Object.keys(glueLanguageNameByExt))
 
 export async function loadGlueSources(
   files: Files,
-  globs: readonly string[]
+  globs: readonly string[],
+  cache: SourceCache<LanguageName> = new Map()
+  // changedFile?: TextDocument
 ): Promise<readonly Source<LanguageName>[]> {
-  return loadSources(files, globs, glueExtensions, glueLanguageNameByExt)
+  return loadSources(files, globs, glueExtensions, glueLanguageNameByExt, cache)
 }
 
 export function getLanguage(ext: string): LanguageName | undefined {
@@ -38,12 +41,15 @@ export function getLanguage(ext: string): LanguageName | undefined {
 
 export async function loadGherkinSources(
   files: Files,
-  globs: readonly string[]
+  globs: readonly string[],
+  cache: SourceCache<'gherkin'> = new Map()
 ): Promise<readonly Source<'gherkin'>[]> {
-  return loadSources(files, globs, new Set(['.feature']), { '.feature': 'gherkin' })
+  return loadSources(files, globs, new Set(['.feature']), { '.feature': 'gherkin' }, cache)
 }
 
 type LanguageNameByExt<L> = Record<string, L>
+
+export type SourceCache<L = unknown> = Map<string, Source<L>>
 
 export async function findUris(files: Files, globs: readonly string[]): Promise<readonly string[]> {
   // Run all the globs in parallel
@@ -57,29 +63,79 @@ export async function findUris(files: Files, globs: readonly string[]): Promise<
   return [...new Set(uris).values()].sort()
 }
 
+export interface TextDocument {
+  uri: string
+  content: string
+}
+
+async function updateSourceInternal<L>(
+  document: TextDocument,
+  files: Files,
+  sourcesCacheMap: SourceCache<L>,
+  languageName: L
+): Promise<Source<L>> {
+  const source: Source<L> = {
+    languageName,
+    uri: document.uri,
+    content: document.content,
+  }
+
+  sourcesCacheMap.set(document.uri, source)
+  return source
+}
+
+export async function updateGherkinSource(
+  document: TextDocument,
+  files: Files,
+  sourcesCacheMap: SourceCache<'gherkin'>
+): Promise<Source<'gherkin'>> {
+  return updateSourceInternal(document, files, sourcesCacheMap, 'gherkin')
+}
+
+export async function updateGlueSource(
+  document: TextDocument,
+  files: Files,
+  sourcesCacheMap: SourceCache<LanguageName>
+): Promise<Source<LanguageName>> {
+  const ext = extname(document.uri)
+  const languageName = getLanguage(ext)
+  if (!languageName) {
+    throw new Error(`Unsupported glue file extension: ${ext} for ${document.uri}`)
+  }
+
+  return updateSourceInternal(document, files, sourcesCacheMap, languageName)
+}
+
 async function loadSources<L>(
   files: Files,
   globs: readonly string[],
   extensions: Set<string>,
-  languageNameByExt: LanguageNameByExt<L>
+  languageNameByExt: LanguageNameByExt<L>,
+  cache: SourceCache<L>
 ): Promise<readonly Source<L>[]> {
   const uris = await findUris(files, globs)
 
-  return Promise.all(
+  const sources = await Promise.all(
     uris
       .filter((uri) => extensions.has(extname(uri)))
       .map<Promise<Source<L>>>(
         (uri) =>
           new Promise<Source<L>>((resolve) => {
             const languageName = languageNameByExt[extname(uri)]
-            return files.readFile(uri).then((content) =>
-              resolve({
+            return files.readFile(uri).then((content) => {
+              const source: Source<L> = {
                 languageName,
                 content,
                 uri,
-              })
-            )
+              }
+
+              cache.set(uri, source)
+
+              resolve(source)
+            })
           })
       )
   )
+
+  return sources
 }
