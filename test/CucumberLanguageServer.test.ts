@@ -90,6 +90,7 @@ describe('CucumberLanguageServer', () => {
     })
     // Ignore log messages
     clientConnection.onNotification(LogMessageNotification.type, () => undefined)
+    clientConnection.onRequest('window/workDoneProgress/create', () => undefined)
     clientConnection.onUnhandledNotification((n) => {
       console.error('Unhandled notification', n)
     })

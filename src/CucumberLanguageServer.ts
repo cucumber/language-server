@@ -3,6 +3,7 @@ import {
   CucumberExpressions,
   ExpressionBuilder,
   ExpressionBuilderResult,
+  expressionLinks,
   getGenerateSnippetCodeAction,
   getGherkinCompletionItems,
   getGherkinDiagnostics,
@@ -13,8 +14,10 @@ import {
   Index,
   jsSearchIndex,
   LanguageName,
+  parameterTypeLinks,
   ParserAdapter,
   semanticTokenTypes,
+  sortSuggestions,
   Source,
   Suggestion,
 } from '@cucumber/language-service'
@@ -110,7 +113,6 @@ export class CucumberLanguageServer {
   private gherkinSourcesCacheMap: SourceCache<'gherkin'> = new Map()
   private glueSourcesCacheMap: SourceCache<LanguageName> = new Map()
   private suggestionsCache: Map<string, Suggestion> = new Map()
-  private expressionBuilderResultCache: ExpressionBuilderResult | undefined = undefined
   public registry: CucumberExpressions.ParameterTypeRegistry
   public expressions: readonly CucumberExpressions.Expression[] = []
   public suggestions: readonly Suggestion[] = []
@@ -312,6 +314,12 @@ export class CucumberLanguageServer {
     connection.onRequest('cucumber/forceReindex', async () => {
       connection.console.info('Received cucumber/forceReindex request')
       try {
+        // Clear all caches for a fresh start
+        this.gherkinSourcesCacheMap.clear()
+        this.glueSourcesCacheMap.clear()
+        this.suggestionsCache.clear()
+        this.expressionBuilderResult = undefined
+
         await this.reindex(undefined, undefined)
         return { success: true }
       } catch (err) {
@@ -387,7 +395,7 @@ export class CucumberLanguageServer {
 
   private scheduleReindexing(document: TextDocument) {
     clearTimeout(this.reindexingTimeout)
-    const timeoutMillis = 1000
+    const timeoutMillis = 1000 // reducing timeout as we will use incremental caching
     this.connection.console.info(`Scheduling reindexing in ${timeoutMillis} ms`)
     this.reindexingTimeout = setTimeout(() => {
       this.reindex(document).catch((err) =>
@@ -467,7 +475,7 @@ export class CucumberLanguageServer {
     if (document) {
       if (document.uri.match(/\.feature$/)) {
         this.connection.console.info(`Updating gherkin source ${document.uri}`)
-        updateGherkinSource(
+        await updateGherkinSource(
           { uri: document.uri, content: document.getText() },
           this.files,
           this.gherkinSourcesCacheMap
@@ -479,11 +487,11 @@ export class CucumberLanguageServer {
 
       const begin: WorkDoneProgressBegin = {
         kind: 'begin',
-        title: 'Loading Gherkin Sources',
+        title: 'Cucumber: Syncing',
         percentage: 10,
       }
       this.connection.sendProgress(WorkDoneProgress.type, token, begin)
-  
+
       await loadGherkinSources(this.files, settings.features, this.gherkinSourcesCacheMap)
     }
 
@@ -529,7 +537,7 @@ export class CucumberLanguageServer {
       `* Found ${glueSources.length} glue file(s) in ${JSON.stringify(settings.glue)}`
     )
 
-    if (this.expressionBuilderResultCache === undefined) {
+    if (this.expressionBuilderResult === undefined) {
       this.connection.console.info(`Building expression builder result from scratch`)
       const report: WorkDoneProgressReport = {
         kind: 'report',
@@ -538,30 +546,30 @@ export class CucumberLanguageServer {
       }
       this.connection.sendProgress(WorkDoneProgress.type, token, report)
 
-      this.expressionBuilderResultCache = this.expressionBuilder.build(
+      this.expressionBuilderResult = this.expressionBuilder.build(
         glueSources,
         settings.parameterTypes
       )
     }
     if (newGlueSource) {
       this.connection.console.info(`Adding new glue source to expression builder result`)
-      this.expressionBuilderResultCache = this.expressionBuilder.rebuild(
-        this.expressionBuilderResultCache,
-        [newGlueSource]
-      )
+      this.expressionBuilderResult = this.expressionBuilder.rebuild(this.expressionBuilderResult, [
+        newGlueSource,
+      ])
     }
 
-    this.expressionBuilderResult = this.expressionBuilderResultCache
     this.connection.console.info(
-      `* Found ${Array.from(this.expressionBuilderResult.parameterTypeLinks.values()).flat().length} parameter types in those glue files`
+      `* Found ${expressionLinks(this.expressionBuilderResult).length} parameter types in those glue files`
     )
-    // for (const parameterTypeLink of this.expressionBuilderResult.parameterTypeLinks) {
-    //   this.connection.console.info(
-    //     `  * {${parameterTypeLink.parameterType.name}} = ${parameterTypeLink.parameterType.regexpStrings}`
-    //   )
-    // }
+    if (!document) {
+      for (const parameterTypeLink of parameterTypeLinks(this.expressionBuilderResult)) {
+        this.connection.console.info(
+          `  * {${parameterTypeLink.parameterType.name}} = ${parameterTypeLink.parameterType.regexpStrings}`
+        )
+      }
+    }
     this.connection.console.info(
-      `* Found ${Array.from(this.expressionBuilderResult.expressionLinks.values()).flat().length} step definitions in those glue files`
+      `* Found ${expressionLinks(this.expressionBuilderResult).length} step definitions in those glue files`
     )
     for (const error of this.expressionBuilderResult.errors) {
       this.connection.console.error(`* Step Definition errors: ${error.stack}`)
@@ -589,7 +597,7 @@ export class CucumberLanguageServer {
           stepTexts,
           this.getNewExpressionsFromLinks(),
           this.suggestionsCache,
-          false,
+          false // dont add to unmatched step texts
         )
       } else if (this.suggestionsCache.size === 0) {
         this.connection.console.info(`Building suggestions from scratch`)
@@ -607,7 +615,7 @@ export class CucumberLanguageServer {
           this.suggestionsCache
         )
       }
-      const suggestions = Array.from(this.suggestionsCache.values())
+      const suggestions = sortSuggestions(this.suggestionsCache)
       this.connection.console.info(`* Built ${suggestions.length} suggestions for auto complete`)
       this.searchIndex = jsSearchIndex(suggestions)
       const registry = this.expressionBuilderResult.registry
@@ -622,10 +630,12 @@ export class CucumberLanguageServer {
       )
     }
 
-    const end: WorkDoneProgressEnd = {
-      kind: 'end',
+    if (!document) {
+      const end: WorkDoneProgressEnd = {
+        kind: 'end',
+      }
+      this.connection.sendProgress(WorkDoneProgress.type, token, end)
     }
-    this.connection.sendProgress(WorkDoneProgress.type, token, end)
   }
 }
 

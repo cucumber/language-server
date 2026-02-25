@@ -74,12 +74,10 @@ async function updateSourceInternal<L>(
   sourcesCacheMap: SourceCache<L>,
   languageName: L
 ): Promise<Source<L>> {
-  const content = await files.readFile(document.uri)
-
   const source: Source<L> = {
     languageName,
     uri: document.uri,
-    content,
+    content: document.content,
   }
 
   sourcesCacheMap.set(document.uri, source)

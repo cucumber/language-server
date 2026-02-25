@@ -74,6 +74,7 @@ describe('Standalone', () => {
         logMessages.push(params)
       }
     })
+    clientConnection.onRequest('window/workDoneProgress/create', () => undefined)
     clientConnection.onUnhandledNotification((n) => {
       console.error('Unhandled notification', n)
     })
