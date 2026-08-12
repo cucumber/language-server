@@ -7,11 +7,13 @@ export const glueExtByLanguageName: Record<LanguageName, string[]> = {
   tsx: ['.ts', '.cts', '.mts', '.tsx'],
   java: ['.java'],
   c_sharp: ['.cs'],
+  clojure: ['.clj', '.cljc', '.cljs'],
   php: ['.php'],
   ruby: ['.rb'],
   python: ['.py'],
   rust: ['.rs'],
   go: ['.go'],
+  scala: ['.scala'],
 }
 
 type ExtLangEntry = [string, LanguageName]
