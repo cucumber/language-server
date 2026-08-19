@@ -170,7 +170,8 @@ export class CucumberLanguageServer {
         })
         connection.languages.semanticTokens.on((semanticTokenParams) => {
           const doc = documents.get(semanticTokenParams.textDocument.uri)
-          if (!doc) return { data: [] }
+          const isGherkin = doc?.languageId === 'gherkin' || doc?.languageId === 'cucumber'
+          if (!doc || !isGherkin) return { data: [] }
           const gherkinSource = doc.getText()
           return getGherkinSemanticTokens(
             gherkinSource,
@@ -186,7 +187,8 @@ export class CucumberLanguageServer {
           if (!this.searchIndex) return []
 
           const doc = documents.get(params.textDocument.uri)
-          if (!doc) return []
+          const isGherkin = doc?.languageId === 'gherkin' || doc?.languageId === 'cucumber'
+          if (!doc || !isGherkin) return []
           const gherkinSource = doc.getText()
           return getGherkinCompletionItems(gherkinSource, params.position, this.searchIndex).slice()
         })
