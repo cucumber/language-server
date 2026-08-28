@@ -16,6 +16,10 @@
     "target": "ES6",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "vscode-languageserver": ["node_modules/vscode-languageserver/lib/common/api"],
+      "vscode-languageserver/node": ["node_modules/vscode-languageserver/lib/node/main"]
+    }
   }
 }
