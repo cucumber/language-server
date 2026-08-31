@@ -136,7 +136,14 @@ export class CucumberLanguageServer {
       if (params.capabilities.workspace?.configuration) {
         connection.onDidChangeConfiguration((params) => {
           this.connection.console.info(`Client sent workspace/configuration`)
-          this.reindex(<Settings>params.settings).catch((err) => {
+          // params.settings may be null or missing features/glue depending on the client;
+          // only use it if it looks like a valid Settings object, otherwise fall back to
+          // getSettings() to avoid a crash on undefined.reduce() during reindex.
+          const settings =
+            params.settings?.features != null && params.settings?.glue != null
+              ? (params.settings as Settings)
+              : undefined
+          this.reindex(settings).catch((err) => {
             connection.console.error(`Failed to reindex: ${err.message}`)
           })
         })
