@@ -6,14 +6,14 @@ import { getExpressionLinksAt, getStepReferences } from '../src/getStepReference
 
 const glueUri = 'file:///home/testdata/rust/steps.rs'
 
+// A step definition: the expression literal on `line`, the function body on the next two lines.
 function link(expression: CucumberExpressions.Expression, line: number): ExpressionLink {
-  const targetSelectionRange = Range.create(line, 12, line, 40)
   return {
     expression,
     locationLink: {
       targetUri: glueUri,
-      targetRange: Range.create(0, 0, 100, 0),
-      targetSelectionRange,
+      targetRange: Range.create(line, 12, line + 2, 1),
+      targetSelectionRange: Range.create(line, 12, line, 40),
     },
   }
 }
@@ -25,13 +25,29 @@ describe('getExpressionLinksAt', () => {
     link(new CucumberExpressions.CucumberExpression('I eat {int} cukes', registry), 8),
   ]
 
-  it('returns the links whose selection range contains the position', () => {
+  it('returns the links whose expression contains the position', () => {
     const result = getExpressionLinksAt(links, glueUri, Position.create(8, 20))
     assert.deepStrictEqual(result, [links[1]])
   })
 
-  it('returns nothing outside the selection ranges', () => {
-    assert.deepStrictEqual(getExpressionLinksAt(links, glueUri, Position.create(5, 0)), [])
+  it('returns the links whose body contains the position', () => {
+    const result = getExpressionLinksAt(links, glueUri, Position.create(4, 0))
+    assert.deepStrictEqual(result, [links[0]])
+  })
+
+  it('returns nothing between step definitions', () => {
+    assert.deepStrictEqual(getExpressionLinksAt(links, glueUri, Position.create(6, 0)), [])
+  })
+
+  it('falls back to the expression literal when the target range is the whole file', () => {
+    const wholeFile: ExpressionLink = {
+      ...links[0],
+      locationLink: { ...links[0].locationLink, targetRange: Range.create(0, 0, 100, 0) },
+    }
+    assert.deepStrictEqual(getExpressionLinksAt([wholeFile], glueUri, Position.create(3, 20)), [
+      wholeFile,
+    ])
+    assert.deepStrictEqual(getExpressionLinksAt([wholeFile], glueUri, Position.create(4, 0)), [])
   })
 
   it('returns nothing for another file', () => {

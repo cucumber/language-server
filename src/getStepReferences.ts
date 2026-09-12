@@ -2,13 +2,13 @@ import { compile } from '@cucumber/gherkin'
 import { walkGherkinDocument } from '@cucumber/gherkin-utils'
 import { ExpressionLink, parseGherkinDocument, Source } from '@cucumber/language-service'
 import { IdGenerator, Step } from '@cucumber/messages'
-import { Location, Position, Range } from 'vscode-languageserver-types'
+import { Location, LocationLink, Position, Range } from 'vscode-languageserver-types'
 
 const newId = IdGenerator.uuid()
 
 /**
- * Returns the step definitions whose expression is located at the given position
- * in a glue file (the cursor is on the expression literal).
+ * Returns the step definitions that contain the given position in a glue file
+ * (anywhere in the step definition, from its expression to the end of its body).
  */
 export function getExpressionLinksAt(
   expressionLinks: readonly ExpressionLink[],
@@ -17,8 +17,18 @@ export function getExpressionLinksAt(
 ): readonly ExpressionLink[] {
   return expressionLinks.filter(
     ({ locationLink }) =>
-      locationLink.targetUri === uri && contains(locationLink.targetSelectionRange, position)
+      locationLink.targetUri === uri && contains(definitionRange(locationLink), position)
   )
+}
+
+// A targetRange starting at the top of the file is the whole file
+// (cucumber/language-service#315); use the expression literal instead.
+function definitionRange(locationLink: LocationLink): Range {
+  const { targetRange, targetSelectionRange } = locationLink
+  const startsAtTop = targetRange.start.line === 0 && targetRange.start.character === 0
+  const selectionAtTop =
+    targetSelectionRange.start.line === 0 && targetSelectionRange.start.character === 0
+  return startsAtTop && !selectionAtTop ? targetSelectionRange : targetRange
 }
 
 function contains(range: Range, position: Position): boolean {
