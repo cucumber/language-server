@@ -1,7 +1,6 @@
 import { WasmParserAdapter } from '@cucumber/language-service/wasm'
 import assert from 'assert'
 import { Duplex } from 'stream'
-import { NullLogger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node'
 import {
   Connection,
   createProtocolConnection,
@@ -14,7 +13,12 @@ import {
   ProtocolConnection,
   TextDocuments,
 } from 'vscode-languageserver'
-import { createConnection } from 'vscode-languageserver/node'
+import {
+  createConnection,
+  NullLogger,
+  StreamMessageReader,
+  StreamMessageWriter,
+} from 'vscode-languageserver/node'
 import {
   CompletionParams,
   CompletionRequest,
