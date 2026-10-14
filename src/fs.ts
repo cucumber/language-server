@@ -12,6 +12,8 @@ export const glueExtByLanguageName: Record<LanguageName, string[]> = {
   python: ['.py'],
   rust: ['.rs'],
   go: ['.go'],
+  scala: ['.scala'],
+  kotlin: ['.kt', '.kts'],
 }
 
 type ExtLangEntry = [string, LanguageName]
