@@ -14,6 +14,7 @@ import {
   jsSearchIndex,
   ParserAdapter,
   semanticTokenTypes,
+  Source,
   Suggestion,
 } from '@cucumber/language-service'
 import {
@@ -32,6 +33,7 @@ import { buildStepTexts } from './buildStepTexts.js'
 import { extname, Files } from './Files.js'
 import { getLanguage, loadGherkinSources, loadGlueSources } from './fs.js'
 import { getStepDefinitionSnippetLinks } from './getStepDefinitionSnippetLinks.js'
+import { getExpressionLinksAt, getStepReferences } from './getStepReferences.js'
 import { Settings } from './types.js'
 import { version } from './version.js'
 
@@ -88,6 +90,7 @@ export class CucumberLanguageServer {
   private readonly expressionBuilder: ExpressionBuilder
   private searchIndex: Index
   private expressionBuilderResult: ExpressionBuilderResult | undefined = undefined
+  private gherkinSources: readonly Source<'gherkin'>[] = []
   private reindexingTimeout: NodeJS.Timeout
   private rootUri: string
   private files: Files
@@ -270,6 +273,21 @@ export class CucumberLanguageServer {
         connection.console.info('onDefinition is disabled')
       }
 
+      if (params.capabilities.textDocument?.references) {
+        connection.onReferences((params) => {
+          if (!this.expressionBuilderResult) return []
+          const expressionLinks = getExpressionLinksAt(
+            this.expressionBuilderResult.expressionLinks,
+            params.textDocument.uri,
+            params.position
+          )
+          if (expressionLinks.length === 0) return []
+          return getStepReferences(this.gherkinSources, expressionLinks).slice()
+        })
+      } else {
+        connection.console.info('onReferences is disabled')
+      }
+
       if (params.capabilities.textDocument?.documentSymbol) {
         connection.onDocumentSymbol((params) => {
           const doc = documents.get(params.textDocument.uri)
@@ -337,6 +355,7 @@ export class CucumberLanguageServer {
       },
       documentFormattingProvider: true,
       definitionProvider: true,
+      referencesProvider: true,
     }
   }
 
@@ -410,6 +429,7 @@ export class CucumberLanguageServer {
 
     this.connection.console.info(`Reindexing ${this.rootUri}`)
     const gherkinSources = await loadGherkinSources(this.files, settings.features)
+    this.gherkinSources = gherkinSources
     this.connection.console.info(
       `* Found ${gherkinSources.length} feature file(s) in ${JSON.stringify(settings.features)}`
     )
