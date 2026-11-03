@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Removed
+- Dropped support for end-of-life Node versions 16, 18 and 20
+
 ### Fixed
 - User's `snippetTemplates` config is ignored
 
