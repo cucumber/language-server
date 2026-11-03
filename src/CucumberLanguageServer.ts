@@ -142,7 +142,7 @@ export class CucumberLanguageServer {
         })
         try {
           await connection.client.register(DidChangeConfigurationNotification.type)
-        } catch (err) {
+        } catch {
           connection.console.info(`Client does not support client/registerCapability. This is OK.`)
         }
       } else {
