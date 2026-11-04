@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import { type ChildProcess, fork } from 'node:child_process'
 import type { Duplex } from 'node:stream'
-import { NullLogger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node'
+import { NullLogger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node.js'
 import {
   createProtocolConnection,
   DidChangeConfigurationNotification,
@@ -22,7 +22,7 @@ describe('Standalone', () => {
 
   beforeEach(async () => {
     logMessages = []
-    serverFork = fork('./bin/cucumber-language-server.cjs', ['--stdio'], {
+    serverFork = fork('./bin/cucumber-language-server.js', ['--stdio'], {
       silent: true,
     })
 

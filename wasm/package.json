@@ -1,7 +1,6 @@
 {
   "name": "wasm",
   "description": "Cucumber Language server using tree-sitter wasm bindings",
-  "main": "../dist/cjs/src/wasm/index.js",
-  "module": "../dist/esm/src/wasm/index.js",
-  "types": "../dist/esm/src/wasm/index.d.ts"
+  "main": "../dist/src/wasm/index.js",
+  "types": "../dist/src/wasm/index.d.ts"
 }

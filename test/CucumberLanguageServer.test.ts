@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import { Duplex } from 'node:stream'
 import { WasmParserAdapter } from '@cucumber/language-service/wasm'
-import { NullLogger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node'
+import { NullLogger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node.js'
 import {
   type Connection,
   createProtocolConnection,
@@ -15,11 +15,11 @@ import {
   type ProtocolConnection,
   TextDocuments,
 } from 'vscode-languageserver'
-import { createConnection } from 'vscode-languageserver/node'
+import { createConnection } from 'vscode-languageserver/node.js'
 import {
   type CompletionParams,
   CompletionRequest,
-} from 'vscode-languageserver-protocol/lib/common/protocol'
+} from 'vscode-languageserver-protocol/lib/common/protocol.js'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { type CompletionItem, CompletionItemKind } from 'vscode-languageserver-types'
 
