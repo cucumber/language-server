@@ -11,10 +11,10 @@
     "skipLibCheck": true,
     "strictNullChecks": true,
     "experimentalDecorators": true,
-    "module": "ESNext",
     "lib": ["ES6", "dom"],
     "target": "ES6",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "allowSyntheticDefaultImports": true,
     "noEmit": true
   }

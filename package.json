@@ -6,45 +6,40 @@
     "node": "^22 || ^24 || >=26"
   },
   "type": "module",
-  "main": "dist/cjs/src/index.js",
-  "module": "dist/esm/src/index.js",
-  "types": "dist/esm/src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/esm/src/index.js",
-      "require": "./dist/cjs/src/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./node": {
-      "import": "./dist/esm/src/node/index.js",
-      "require": "./dist/cjs/src/node/index.js"
+      "types": "./dist/node/index.d.ts",
+      "default": "./dist/node/index.js"
     },
     "./wasm": {
-      "import": "./dist/esm/src/wasm/index.js",
-      "require": "./dist/cjs/src/wasm/index.js"
+      "types": "./dist/wasm/index.d.ts",
+      "default": "./dist/wasm/index.js"
     }
   },
   "files": [
-    "dist/cjs/src",
-    "dist/cjs/package.json",
-    "dist/esm/src",
+    "dist",
     "node",
     "wasm"
   ],
   "bin": {
-    "cucumber-language-server": "bin/cucumber-language-server.cjs"
+    "cucumber-language-server": "bin/cucumber-language-server.js"
   },
   "scripts": {
-    "build:cjs": "tsc --build tsconfig.build-cjs.json && cp package.cjs.json dist/cjs/package.json",
-    "build:esm": "tsc --build tsconfig.build-esm.json",
+    "build": "npm run build:version && tsc --project tsconfig.build.json",
     "build:version": "node --eval \"console.log('export const version = \\'' + require('./package.json').version + '\\'')\" > src/version.ts",
-    "build": "npm run build:version && npm run build:cjs && npm run build:esm",
-    "test": "npm run test:cjs",
-    "test:cjs": "npm run build:cjs && mocha --no-config --recursive dist/cjs/test",
-    "pretest": "npm run build:version",
-    "prepublishOnly": "npm run build",
     "fix": "biome check --fix --error-on-warnings",
     "lint": "biome check --error-on-warnings",
-    "prepare": "husky"
+    "postbuild": "node -e \"require('.')\"",
+    "prepare": "husky",
+    "prepublishOnly": "npm run build",
+    "pretest": "npm run build",
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
