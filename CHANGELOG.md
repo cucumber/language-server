@@ -6,13 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
-### Removed
-- Dropped support for end-of-life Node versions 16, 18 and 20
+### Changed
+- BREAKING CHANGE: Switch to ESM ([#155](https://github.com/cucumber/language-server/pull/155))
 
 ### Fixed
 - User's `snippetTemplates` config is ignored
 - Default `glue` globs miss `.cjs`, `.mjs`, `.cts` and `.mts` files
 - Glue and feature files not found when root is not the current directory
+
+### Removed
+- Dropped support for end-of-life Node versions 16, 18 and 20
 
 ## [1.7.0] - 2025-05-18
 ### Changed
