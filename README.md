@@ -11,11 +11,11 @@
   <a href="https://www.npmjs.com/package/@cucumber/language-server">
     <img src="https://img.shields.io/npm/v/@cucumber/language-server.svg?color=dark-green" alt="npm">
   </a>
-  <a href="https://github.com/cucumber/language-server/actions/workflows/test-javascript.yml">
-    <img src="https://github.com/cucumber/language-server/actions/workflows/test-javascript.yml/badge.svg" alt="test-javascript-package">
+  <a href="https://github.com/cucumber/language-server/actions/workflows/test-javascript.yaml">
+    <img src="https://github.com/cucumber/language-server/actions/workflows/test-javascript.yaml/badge.svg" alt="test-javascript-package">
   </a>
-  <a href="https://github.com/cucumber/language-server/actions/workflows/release-github.yml">
-    <img src="https://github.com/cucumber/language-server/actions/workflows/release-github.yml/badge.svg" alt="release-package-github">
+  <a href="https://github.com/cucumber/language-server/actions/workflows/release-github.yaml">
+    <img src="https://github.com/cucumber/language-server/actions/workflows/release-github.yaml/badge.svg" alt="release-package-github">
   </a>
   <a href="https://opencollective.com/cucumber">
     <img src="https://opencollective.com/cucumber/backers/badge.svg" alt="backers">
