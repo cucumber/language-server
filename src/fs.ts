@@ -1,6 +1,6 @@
-import { LanguageName, Source } from '@cucumber/language-service'
+import type { LanguageName, Source } from '@cucumber/language-service'
 
-import { extname, Files } from './Files.js'
+import { extname, type Files } from './Files.js'
 
 export const glueExtByLanguageName: Record<LanguageName, string[]> = {
   javascript: ['.js', '.cjs', '.mjs', '.jsx'],
@@ -53,7 +53,7 @@ export async function findUris(files: Files, globs: readonly string[]): Promise<
   }, [])
   const uriArrays = await Promise.all(urisPromises)
   // Flatten them all
-  const uris = uriArrays.flatMap((paths) => paths)
+  const uris = uriArrays.flat()
   return [...new Set(uris).values()].sort()
 }
 

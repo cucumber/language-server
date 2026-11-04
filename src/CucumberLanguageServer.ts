@@ -1,8 +1,8 @@
 import {
   buildSuggestions,
-  CucumberExpressions,
+  type CucumberExpressions,
   ExpressionBuilder,
-  ExpressionBuilderResult,
+  type ExpressionBuilderResult,
   getGenerateSnippetCodeAction,
   getGherkinCompletionItems,
   getGherkinDiagnostics,
@@ -10,29 +10,29 @@ import {
   getGherkinFormattingEdits,
   getGherkinSemanticTokens,
   getStepDefinitionLocationLinks,
-  Index,
+  type Index,
   jsSearchIndex,
-  ParserAdapter,
+  type ParserAdapter,
+  type Suggestion,
   semanticTokenTypes,
-  Suggestion,
 } from '@cucumber/language-service'
 import {
-  CodeAction,
+  type CodeAction,
   CodeActionKind,
   ConfigurationRequest,
-  Connection,
+  type Connection,
   DidChangeConfigurationNotification,
-  ServerCapabilities,
-  TextDocuments,
+  type ServerCapabilities,
   TextDocumentSyncKind,
+  type TextDocuments,
 } from 'vscode-languageserver'
-import { TextDocument } from 'vscode-languageserver-textdocument'
+import type { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { buildStepTexts } from './buildStepTexts.js'
-import { extname, Files } from './Files.js'
+import { extname, type Files } from './Files.js'
 import { getLanguage, loadGherkinSources, loadGlueSources } from './fs.js'
 import { getStepDefinitionSnippetLinks } from './getStepDefinitionSnippetLinks.js'
-import { Settings } from './types.js'
+import type { Settings } from './types.js'
 import { version } from './version.js'
 
 type ServerInfo = {
@@ -99,7 +99,7 @@ export class CucumberLanguageServer {
     private readonly connection: Connection,
     private readonly documents: TextDocuments<TextDocument>,
     parserAdapter: ParserAdapter,
-    private readonly makeFiles: (rootUri: string) => Files,
+    readonly makeFiles: (rootUri: string) => Files,
     private readonly onReindexed: (
       registry: CucumberExpressions.ParameterTypeRegistry,
       expressions: readonly CucumberExpressions.Expression[],
@@ -142,7 +142,7 @@ export class CucumberLanguageServer {
         })
         try {
           await connection.client.register(DidChangeConfigurationNotification.type)
-        } catch (err) {
+        } catch (_err) {
           connection.console.info(`Client does not support client/registerCapability. This is OK.`)
         }
       } else {
@@ -170,7 +170,9 @@ export class CucumberLanguageServer {
         })
         connection.languages.semanticTokens.on((semanticTokenParams) => {
           const doc = documents.get(semanticTokenParams.textDocument.uri)
-          if (!doc) return { data: [] }
+          if (!doc) {
+            return { data: [] }
+          }
           const gherkinSource = doc.getText()
           return getGherkinSemanticTokens(
             gherkinSource,
@@ -183,10 +185,14 @@ export class CucumberLanguageServer {
 
       if (params.capabilities.textDocument?.completion?.completionItem?.snippetSupport) {
         connection.onCompletion((params) => {
-          if (!this.searchIndex) return []
+          if (!this.searchIndex) {
+            return []
+          }
 
           const doc = documents.get(params.textDocument.uri)
-          if (!doc) return []
+          if (!doc) {
+            return []
+          }
           const gherkinSource = doc.getText()
           return getGherkinCompletionItems(gherkinSource, params.position, this.searchIndex).slice()
         })
@@ -199,7 +205,9 @@ export class CucumberLanguageServer {
       if (params.capabilities.textDocument?.formatting) {
         connection.onDocumentFormatting((params) => {
           const doc = documents.get(params.textDocument.uri)
-          if (!doc) return []
+          if (!doc) {
+            return []
+          }
           const gherkinSource = doc.getText()
           return getGherkinFormattingEdits(gherkinSource)
         })
@@ -258,7 +266,9 @@ export class CucumberLanguageServer {
       if (params.capabilities.textDocument?.definition) {
         connection.onDefinition((params) => {
           const doc = documents.get(params.textDocument.uri)
-          if (!doc || !this.expressionBuilderResult) return []
+          if (!doc || !this.expressionBuilderResult) {
+            return []
+          }
           const gherkinSource = doc.getText()
           return getStepDefinitionLocationLinks(
             gherkinSource,
@@ -273,7 +283,9 @@ export class CucumberLanguageServer {
       if (params.capabilities.textDocument?.documentSymbol) {
         connection.onDocumentSymbol((params) => {
           const doc = documents.get(params.textDocument.uri)
-          if (!doc) return []
+          if (!doc) {
+            return []
+          }
           const gherkinSource = doc.getText()
           const symbol = getGherkinDocumentFeatureSymbol(gherkinSource)
           return symbol ? [symbol] : null
@@ -479,6 +491,8 @@ export class CucumberLanguageServer {
 }
 
 function getArray<T>(arr: readonly T[] | undefined | null, defaultArr: readonly T[]): readonly T[] {
-  if (!Array.isArray(arr) || arr.length === 0) return defaultArr
+  if (!Array.isArray(arr) || arr.length === 0) {
+    return defaultArr
+  }
   return arr
 }

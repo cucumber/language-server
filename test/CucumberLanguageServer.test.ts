@@ -1,30 +1,30 @@
+import assert from 'node:assert'
+import { Duplex } from 'node:stream'
 import { WasmParserAdapter } from '@cucumber/language-service/wasm'
-import assert from 'assert'
-import { Duplex } from 'stream'
 import { NullLogger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node'
 import {
-  Connection,
+  type Connection,
   createProtocolConnection,
   DidChangeConfigurationNotification,
-  DidChangeConfigurationParams,
-  InitializeParams,
+  type DidChangeConfigurationParams,
+  type InitializeParams,
   InitializeRequest,
   InsertTextFormat,
   LogMessageNotification,
-  ProtocolConnection,
+  type ProtocolConnection,
   TextDocuments,
 } from 'vscode-languageserver'
 import { createConnection } from 'vscode-languageserver/node'
 import {
-  CompletionParams,
+  type CompletionParams,
   CompletionRequest,
 } from 'vscode-languageserver-protocol/lib/common/protocol'
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import { CompletionItem, CompletionItemKind } from 'vscode-languageserver-types'
+import { type CompletionItem, CompletionItemKind } from 'vscode-languageserver-types'
 
 import { CucumberLanguageServer } from '../src/CucumberLanguageServer.js'
 import { NodeFiles } from '../src/node/NodeFiles.js'
-import { Settings } from '../src/types.js'
+import type { Settings } from '../src/types.js'
 
 describe('CucumberLanguageServer', () => {
   let inputStream: Duplex
@@ -120,7 +120,7 @@ describe('CucumberLanguageServer', () => {
       'mts',
     ]
 
-    fileExtensions.forEach((fileExtension) =>
+    for (const fileExtension of fileExtensions) {
       it(`returns completion items for *.${fileExtension} files`, async () => {
         // First we need to configure the server, telling it where to find Gherkin documents and Glue code.
         // Note that *pushing* settings from the client to the server is deprecated in the LSP. We're only using it
@@ -175,6 +175,7 @@ describe('CucumberLanguageServer', () => {
             kind: CompletionItemKind.Text,
             labelDetails: {},
             textEdit: {
+              // biome-ignore lint/suspicious/noTemplateCurlyInString: LSP snippet syntax, not a template
               newText: 'I have ${1|5,8|} cukes',
               range: {
                 start: {
@@ -191,7 +192,7 @@ describe('CucumberLanguageServer', () => {
         ]
         assert.deepStrictEqual(completionItems, expected)
       })
-    )
+    }
   })
 })
 

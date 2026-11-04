@@ -42,8 +42,8 @@
     "test:cjs": "npm run build:cjs && mocha --no-config --recursive dist/cjs/test",
     "pretest": "npm run build:version",
     "prepublishOnly": "npm run build",
-    "eslint-fix": "eslint --ext ts --max-warnings 0 --fix src test",
-    "eslint": "eslint --ext ts --max-warnings 0 src test",
+    "fix": "biome check --fix --error-on-warnings",
+    "lint": "biome check --error-on-warnings",
     "prepare": "husky"
   },
   "repository": {
@@ -69,24 +69,17 @@
   },
   "homepage": "https://github.com/cucumber/language-server#readme",
   "lint-staged": {
-    "{src,test}/**/*.ts": "npm run eslint-fix"
+    "*": "biome check --fix --no-errors-on-unmatched --error-on-warnings"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.4",
+    "@cucumber/biome-config": "github:cucumber/biome-config#v0.6.0",
     "@cucumber/cucumber": "13.3.0",
     "@types/mocha": "10.0.10",
     "@types/node": "26.6.6",
-    "@typescript-eslint/eslint-plugin": "7.18.0",
-    "@typescript-eslint/parser": "7.18.0",
-    "eslint": "8.57.1",
-    "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-import": "2.32.0",
-    "eslint-plugin-n": "17.24.0",
-    "eslint-plugin-prettier": "5.5.7",
-    "eslint-plugin-simple-import-sort": "12.1.1",
     "husky": "9.1.7",
     "lint-staged": "^17.0.0",
     "mocha": "12.0.3",
-    "prettier": "3.9.10",
     "ts-node": "10.9.2",
     "typescript": "5.9.3",
     "vscode-jsonrpc": "8.2.1",
