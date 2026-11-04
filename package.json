@@ -6,24 +6,24 @@
     "node": "^22 || ^24 || >=26"
   },
   "type": "module",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
-      "default": "./dist/src/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./node": {
-      "types": "./dist/src/node/index.d.ts",
-      "default": "./dist/src/node/index.js"
+      "types": "./dist/node/index.d.ts",
+      "default": "./dist/node/index.js"
     },
     "./wasm": {
-      "types": "./dist/src/wasm/index.d.ts",
-      "default": "./dist/src/wasm/index.js"
+      "types": "./dist/wasm/index.d.ts",
+      "default": "./dist/wasm/index.js"
     }
   },
   "files": [
-    "dist/src",
+    "dist",
     "node",
     "wasm"
   ],
@@ -31,7 +31,7 @@
     "cucumber-language-server": "bin/cucumber-language-server.js"
   },
   "scripts": {
-    "build": "npm run build:version && tsc --build tsconfig.build.json",
+    "build": "npm run build:version && tsc --project tsconfig.build.json",
     "build:version": "node --eval \"console.log('export const version = \\'' + require('./package.json').version + '\\'')\" > src/version.ts",
     "fix": "biome check --fix --error-on-warnings",
     "lint": "biome check --error-on-warnings",
