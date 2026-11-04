@@ -1,9 +1,9 @@
+import fs from 'node:fs/promises'
+import { relative } from 'node:path'
+import url from 'node:url'
 import fg from 'fast-glob'
-import fs from 'fs/promises'
-import { relative } from 'path'
-import url from 'url'
 
-import { Files } from '../Files.js'
+import type { Files } from '../Files.js'
 
 export class NodeFiles implements Files {
   constructor(private readonly rootUri: string) {}

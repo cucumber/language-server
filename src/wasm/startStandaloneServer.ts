@@ -4,7 +4,7 @@ import { createConnection, ProposedFeatures } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { CucumberLanguageServer } from '../CucumberLanguageServer'
-import { Files } from '../Files'
+import type { Files } from '../Files'
 
 export function startStandaloneServer(wasmBaseUrl: string, makeFiles: (rootUri: string) => Files) {
   const adapter = new WasmParserAdapter(wasmBaseUrl)

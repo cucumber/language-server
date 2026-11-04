@@ -1,9 +1,8 @@
 #!/usr/bin/env node
-/* eslint-disable @typescript-eslint/no-var-requires */
 require('source-map-support').install()
 const { startStandaloneServer } = require('../dist/cjs/src/wasm/startStandaloneServer')
 const { NodeFiles } = require('../dist/cjs/src/node/NodeFiles')
-const path = require('path')
+const path = require('node:path')
 const { version } = require('../dist/cjs/src/version')
 
 const wasmBasePath = path.resolve(`${__dirname}/../node_modules/@cucumber/language-service/dist`)

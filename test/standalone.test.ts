@@ -1,19 +1,19 @@
-import assert from 'assert'
-import { ChildProcess, fork } from 'child_process'
-import { Duplex } from 'stream'
+import assert from 'node:assert'
+import { type ChildProcess, fork } from 'node:child_process'
+import type { Duplex } from 'node:stream'
 import { NullLogger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node'
 import {
   createProtocolConnection,
   DidChangeConfigurationNotification,
-  DidChangeConfigurationParams,
-  InitializeParams,
+  type DidChangeConfigurationParams,
+  type InitializeParams,
   InitializeRequest,
   LogMessageNotification,
-  LogMessageParams,
-  ProtocolConnection,
+  type LogMessageParams,
+  type ProtocolConnection,
 } from 'vscode-languageserver'
 
-import { Settings } from '../src/types.js'
+import type { Settings } from '../src/types.js'
 
 describe('Standalone', () => {
   let serverFork: ChildProcess
