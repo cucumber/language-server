@@ -61,8 +61,12 @@ const defaultSettings: Settings = {
     'src/test/**/*.java',
     // Cucumber-Js
     'features/**/*.ts',
+    'features/**/*.cts',
+    'features/**/*.mts',
     'features/**/*.tsx',
     'features/**/*.js',
+    'features/**/*.cjs',
+    'features/**/*.mjs',
     'features/**/*.jsx',
     // Behat
     'features/**/*.php',

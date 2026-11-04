@@ -24,7 +24,12 @@ export class NodeFiles implements Files {
 
   async findUris(glob: string): Promise<readonly string[]> {
     const cwd = url.fileURLToPath(this.rootUri)
-    const paths = await fg(glob, { cwd, caseSensitiveMatch: false, onlyFiles: true })
+    const paths = await fg(glob, {
+      cwd,
+      absolute: true,
+      caseSensitiveMatch: false,
+      onlyFiles: true,
+    })
     return paths.map((path) => url.pathToFileURL(path).href)
   }
 

@@ -7,6 +7,7 @@ import {
   createProtocolConnection,
   DidChangeConfigurationNotification,
   type DidChangeConfigurationParams,
+  InitializedNotification,
   type InitializeParams,
   InitializeRequest,
   InsertTextFormat,
@@ -27,6 +28,7 @@ import { NodeFiles } from '../src/node/NodeFiles.js'
 import type { Settings } from '../src/types.js'
 
 describe('CucumberLanguageServer', () => {
+  let rootPath = process.cwd()
   let inputStream: Duplex
   let outputStream: Duplex
   let clientConnection: ProtocolConnection
@@ -49,7 +51,7 @@ describe('CucumberLanguageServer', () => {
     serverConnection.listen()
 
     const initializeParams: InitializeParams = {
-      rootUri: `file://${process.cwd()}`,
+      rootUri: `file://${rootPath}`,
       processId: NaN, // This id is used by vscode-languageserver. Set as NaN so that the watchdog responsible for watching this process does not run.
       capabilities: {
         workspace: {
@@ -126,8 +128,8 @@ describe('CucumberLanguageServer', () => {
         // Note that *pushing* settings from the client to the server is deprecated in the LSP. We're only using it
         // here because it's easier to implement in the test.
         const settings: Settings = {
-          features: ['testdata/**/*.feature'],
-          glue: [`testdata/**/*.${fileExtension}`],
+          features: ['testdata/gherkin/*.feature'],
+          glue: [`testdata/{javascript,typescript}/*.${fileExtension}`],
           parameterTypes: [],
           snippetTemplates: {},
         }
@@ -193,6 +195,50 @@ describe('CucumberLanguageServer', () => {
         assert.deepStrictEqual(completionItems, expected)
       })
     }
+
+    context('with default settings', () => {
+      before(() => {
+        rootPath = `${process.cwd()}/testdata/default-globs`
+      })
+
+      after(() => {
+        rootPath = process.cwd()
+      })
+
+      it('finds glue in module-specific JavaScript and TypeScript files', async () => {
+        await clientConnection.sendNotification(InitializedNotification.type, {})
+
+        // TODO: Wait for a WorkDoneProgressEnd notification instead
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+
+        documents.get = () =>
+          TextDocument.create(
+            'testdoc',
+            'gherkin',
+            1,
+            `Feature: Hello
+  Scenario: World
+    Given I have
+    `
+          )
+        const completionItems = (await clientConnection.sendRequest(CompletionRequest.type, {
+          textDocument: {
+            uri: 'features/test.feature',
+          },
+          position: {
+            line: 2,
+            character: 16,
+          },
+        })) as CompletionItem[]
+
+        assert.deepStrictEqual(completionItems.map((item) => item.label).sort(), [
+          'I have {int} cjs cukes',
+          'I have {int} cts cukes',
+          'I have {int} mjs cukes',
+          'I have {int} mts cukes',
+        ])
+      })
+    })
   })
 })
 
