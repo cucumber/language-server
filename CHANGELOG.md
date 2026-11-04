@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - User's `snippetTemplates` config is ignored
+- Default `glue` globs miss `.cjs`, `.mjs`, `.cts` and `.mts` files
+- Glue and feature files not found when root is not the current directory
 
 ## [1.7.0] - 2025-05-18
 ### Changed
