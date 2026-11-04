@@ -41,3 +41,4 @@ jobs:
         if: ${{ matrix.os == 'windows-latest' }}
       - run: npm test
       - run: npm run lint
+        if: ${{ matrix.os == 'ubuntu-latest' }}
