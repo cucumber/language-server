@@ -90,12 +90,12 @@ const defaultSettings: Settings = {
 
 export class CucumberLanguageServer {
   private readonly expressionBuilder: ExpressionBuilder
-  private searchIndex: Index
+  private searchIndex!: Index
   private expressionBuilderResult: ExpressionBuilderResult | undefined = undefined
-  private reindexingTimeout: NodeJS.Timeout
-  private rootUri: string
-  private files: Files
-  public registry: CucumberExpressions.ParameterTypeRegistry
+  private reindexingTimeout!: NodeJS.Timeout
+  private rootUri!: string
+  private files!: Files
+  public registry!: CucumberExpressions.ParameterTypeRegistry
   public expressions: readonly CucumberExpressions.Expression[] = []
   public suggestions: readonly Suggestion[] = []
 
@@ -411,7 +411,7 @@ export class CucumberLanguageServer {
         return defaultSettings
       }
     } catch (err) {
-      this.connection.console.error(`Failed to request configuration: ${err.message}`)
+      this.connection.console.error(`Failed to request configuration: ${(err as Error).message}`)
       this.connection.console.error(`Using default settings`)
       return defaultSettings
     }
@@ -484,7 +484,7 @@ export class CucumberLanguageServer {
       this.suggestions = suggestions
       this.onReindexed(registry, expressions, suggestions)
     } catch (err) {
-      this.connection.console.error(err.stack)
+      this.connection.console.error((err as Error).stack as string)
       this.connection.console.error(
         'Please report an issue at https://github.com/cucumber/language-service/issues with the above stack trace'
       )
