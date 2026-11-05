@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - BREAKING CHANGE: Switch to ESM ([#155](https://github.com/cucumber/language-server/pull/155))
 
+### Added
+- Support Scala step definitions, found in `src/test/**/*.scala` by default
+
 ### Fixed
 - User's `snippetTemplates` config is ignored
 - Default `glue` globs miss `.cjs`, `.mjs`, `.cts` and `.mts` files

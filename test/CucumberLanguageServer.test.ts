@@ -120,6 +120,9 @@ describe('CucumberLanguageServer', () => {
       'ts',
       'cts',
       'mts',
+
+      // Scala
+      'scala',
     ]
 
     for (const fileExtension of fileExtensions) {
@@ -129,7 +132,7 @@ describe('CucumberLanguageServer', () => {
         // here because it's easier to implement in the test.
         const settings: Settings = {
           features: ['testdata/gherkin/*.feature'],
-          glue: [`testdata/{javascript,typescript}/*.${fileExtension}`],
+          glue: [`testdata/{javascript,typescript,scala}/*.${fileExtension}`],
           parameterTypes: [],
           snippetTemplates: {},
         }
@@ -236,6 +239,7 @@ describe('CucumberLanguageServer', () => {
           'I have {int} cts cukes',
           'I have {int} mjs cukes',
           'I have {int} mts cukes',
+          'I have {int} scala cukes',
         ])
       })
     })
