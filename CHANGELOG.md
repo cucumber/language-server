@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Changed
 - BREAKING CHANGE: Switch to ESM ([#155](https://github.com/cucumber/language-server/pull/155))
+- Update dependency @cucumber/language-service to 2.0.0
+- Update dependency vscode-languageserver to 11.0.0
 
 ### Added
 - Support Scala step definitions, found in `src/test/**/*.scala` by default

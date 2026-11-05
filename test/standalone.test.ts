@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import { type ChildProcess, fork } from 'node:child_process'
 import type { Duplex } from 'node:stream'
-import { NullLogger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node.js'
+import { NullLogger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node'
 import {
   createProtocolConnection,
   DidChangeConfigurationNotification,

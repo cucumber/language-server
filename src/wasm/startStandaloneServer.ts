@@ -1,6 +1,6 @@
 import { WasmParserAdapter } from '@cucumber/language-service/wasm'
 import { TextDocuments } from 'vscode-languageserver'
-import { createConnection, ProposedFeatures } from 'vscode-languageserver/node.js'
+import { createConnection, ProposedFeatures } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { CucumberLanguageServer } from '../CucumberLanguageServer.js'

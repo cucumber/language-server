@@ -78,15 +78,15 @@
     "mocha": "12.0.3",
     "ts-node": "10.9.2",
     "typescript": "^6.0.3",
-    "vscode-jsonrpc": "8.2.1",
-    "vscode-languageserver-protocol": "3.17.2"
+    "vscode-jsonrpc": "10.0.0",
+    "vscode-languageserver-protocol": "3.18.5"
   },
   "dependencies": {
     "@cucumber/gherkin-utils": "^12.0.0",
-    "@cucumber/language-service": "^1.7.0",
+    "@cucumber/language-service": "^2.0.0",
     "fast-glob": "3.3.3",
     "source-map-support": "0.5.21",
-    "vscode-languageserver": "8.0.2",
+    "vscode-languageserver": "11.0.0",
     "vscode-languageserver-textdocument": "1.0.16",
     "vscode-languageserver-types": "3.18.5"
   }
