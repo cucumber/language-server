@@ -117,9 +117,6 @@ describe('CucumberLanguageServer', () => {
       'ts',
       'cts',
       'mts',
-
-      // Scala
-      'scala',
     ]
 
     for (const fileExtension of fileExtensions) {
@@ -129,7 +126,7 @@ describe('CucumberLanguageServer', () => {
         // here because it's easier to implement in the test.
         const settings: Settings = {
           features: ['testdata/gherkin/*.feature'],
-          glue: [`testdata/{javascript,typescript,scala}/*.${fileExtension}`],
+          glue: [`testdata/{javascript,typescript}/*.${fileExtension}`],
           parameterTypes: [],
           snippetTemplates: {},
         }
@@ -196,7 +193,7 @@ describe('CucumberLanguageServer', () => {
       })
     }
 
-    context('with default settings', () => {
+    describe('with default settings', () => {
       before(() => {
         rootPath = `${process.cwd()}/testdata/default-globs`
       })
@@ -236,8 +233,49 @@ describe('CucumberLanguageServer', () => {
           'I have {int} cts cukes',
           'I have {int} mjs cukes',
           'I have {int} mts cukes',
-          'I have {int} scala cukes',
         ])
+      })
+    })
+
+    describe('with default settings in a Scala project', () => {
+      before(() => {
+        rootPath = `${process.cwd()}/testdata/default-globs-scala`
+      })
+
+      after(() => {
+        rootPath = process.cwd()
+      })
+
+      it('finds glue in Scala files', async () => {
+        await clientConnection.sendNotification(InitializedNotification.type, {})
+
+        // TODO: Wait for a WorkDoneProgressEnd notification instead
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+
+        documents.get = () =>
+          TextDocument.create(
+            'testdoc',
+            'gherkin',
+            1,
+            `Feature: Hello
+  Scenario: World
+    Given I have
+    `
+          )
+        const completionItems = (await clientConnection.sendRequest(CompletionRequest.type, {
+          textDocument: {
+            uri: 'src/test/resources/test.feature',
+          },
+          position: {
+            line: 2,
+            character: 16,
+          },
+        })) as CompletionItem[]
+
+        assert.deepStrictEqual(
+          completionItems.map((item) => item.label),
+          ['I have {int} scala cukes']
+        )
       })
     })
   })
