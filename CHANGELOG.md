@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - User's `snippetTemplates` config is ignored
 - Default `glue` globs miss `.cjs`, `.mjs`, `.cts` and `.mts` files
 - Glue and feature files not found when root is not the current directory
-- WASM files not found when `@cucumber/language-service` is hoisted
+- WASM files not found when `@cucumber/language-service` is hoisted ([#159](https://github.com/cucumber/language-server/pull/159))
 
 ### Removed
 - BREAKING CHANGE: Dropped support for end-of-life Node versions 16, 18 and 20
