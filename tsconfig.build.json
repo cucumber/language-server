@@ -1,13 +1,8 @@
 {
   "extends": "./tsconfig.json",
+  "include": ["src"],
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
     "rootDir": "src",
-    "noEmit": false,
-    "outDir": "dist",
-    "lib": ["ES2019"]
-  },
-  "include": ["src"]
+    "outDir": "dist"
+  }
 }
