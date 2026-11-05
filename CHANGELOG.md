@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [2.0.0] - 2026-11-05
 ### Added
 - Support Scala step definitions, found in `src/test/**/*.scala` by default
 
@@ -268,7 +270,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/cucumber/language-server/compare/v1.7.0...v2.0.0
 [1.7.0]: https://github.com/cucumber/language-server/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/cucumber/language-server/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/cucumber/language-server/compare/v1.4.0...v1.5.0
