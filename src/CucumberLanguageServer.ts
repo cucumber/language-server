@@ -59,6 +59,7 @@ const defaultSettings: Settings = {
   glue: [
     // Cucumber-JVM
     'src/test/**/*.java',
+    'src/test/**/*.scala',
     // Cucumber-Js
     'features/**/*.ts',
     'features/**/*.cts',
