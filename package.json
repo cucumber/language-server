@@ -68,7 +68,7 @@
     "*": "biome check --fix --no-errors-on-unmatched --error-on-warnings"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.4",
+    "@biomejs/biome": "2.6.5",
     "@cucumber/biome-config": "github:cucumber/biome-config#v0.6.0",
     "@cucumber/cucumber": "13.3.0",
     "@tsconfig/recommended": "^1.0.13",
