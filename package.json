@@ -83,8 +83,10 @@
     "vscode-languageserver-protocol": "3.18.5"
   },
   "dependencies": {
+    "@cucumber/gherkin": "^32.2.0",
     "@cucumber/gherkin-utils": "^12.0.0",
     "@cucumber/language-service": "^2.0.0",
+    "@cucumber/messages": "^34.0.0",
     "fast-glob": "3.3.3",
     "source-map-support": "0.5.21",
     "vscode-languageserver": "11.0.0",
