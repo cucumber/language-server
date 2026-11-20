@@ -84,6 +84,8 @@ const defaultSettings: Settings = {
     '*specs*/**/*.cs',
     // Godog
     'features/**/*_test.go',
+    // Cucumber-Clojure
+    'features/**/*.clj',
   ],
   parameterTypes: [],
   snippetTemplates: {},
