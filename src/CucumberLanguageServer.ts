@@ -60,6 +60,7 @@ const defaultSettings: Settings = {
     // Cucumber-JVM
     'src/test/**/*.java',
     'src/test/**/*.scala',
+    'src/test/**/*.kt',
     // Cucumber-Js
     'features/**/*.ts',
     'features/**/*.cts',
