@@ -6,8 +6,24 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [2.0.0] - 2026-11-05
+### Added
+- Support Scala step definitions, found in `src/test/**/*.scala` by default
+
+### Changed
+- BREAKING CHANGE: Switch to ESM ([#155](https://github.com/cucumber/language-server/pull/155))
+- Update dependency @cucumber/language-service to 2.0.0
+- Update dependency vscode-languageserver to 11.0.0
+
 ### Fixed
 - User's `snippetTemplates` config is ignored
+- Default `glue` globs miss `.cjs`, `.mjs`, `.cts` and `.mts` files
+- Glue and feature files not found when root is not the current directory
+- WASM files not found when `@cucumber/language-service` is hoisted ([#159](https://github.com/cucumber/language-server/pull/159))
+
+### Removed
+- BREAKING CHANGE: Dropped support for end-of-life Node versions 16, 18 and 20
 
 ## [1.7.0] - 2025-05-18
 ### Changed
@@ -254,7 +270,8 @@ code is. The server uses this for auto complete and detecting defined steps.
 ### Added
 - First release
 
-[Unreleased]: https://github.com/cucumber/language-server/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/cucumber/language-server/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/cucumber/language-server/compare/v1.7.0...v2.0.0
 [1.7.0]: https://github.com/cucumber/language-server/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/cucumber/language-server/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/cucumber/language-server/compare/v1.4.0...v1.5.0

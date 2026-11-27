@@ -1,5 +1,5 @@
-import assert from 'assert'
-import { LocationLink, Range } from 'vscode-languageserver-types'
+import assert from 'node:assert'
+import { type LocationLink, Range } from 'vscode-languageserver-types'
 
 import { getStepDefinitionSnippetLinks } from '../src/getStepDefinitionSnippetLinks.js'
 

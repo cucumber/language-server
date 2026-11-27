@@ -11,11 +11,11 @@
   <a href="https://www.npmjs.com/package/@cucumber/language-server">
     <img src="https://img.shields.io/npm/v/@cucumber/language-server.svg?color=dark-green" alt="npm">
   </a>
-  <a href="https://github.com/cucumber/language-server/actions/workflows/test-javascript.yml">
-    <img src="https://github.com/cucumber/language-server/actions/workflows/test-javascript.yml/badge.svg" alt="test-javascript-package">
+  <a href="https://github.com/cucumber/language-server/actions/workflows/test-javascript.yaml">
+    <img src="https://github.com/cucumber/language-server/actions/workflows/test-javascript.yaml/badge.svg" alt="test-javascript-package">
   </a>
-  <a href="https://github.com/cucumber/language-server/actions/workflows/release-github.yml">
-    <img src="https://github.com/cucumber/language-server/actions/workflows/release-github.yml/badge.svg" alt="release-package-github">
+  <a href="https://github.com/cucumber/language-server/actions/workflows/release-github.yaml">
+    <img src="https://github.com/cucumber/language-server/actions/workflows/release-github.yaml/badge.svg" alt="release-package-github">
   </a>
   <a href="https://opencollective.com/cucumber">
     <img src="https://opencollective.com/cucumber/backers/badge.svg" alt="backers">
@@ -49,12 +49,6 @@ provide them.
 The server retrieves `cucumber.*` settings from the client with a [workspace/configuration](https://microsoft.github.io/language-server-protocol/specification#workspace_configuration) request.
 
 See [Settings](https://github.com/cucumber/language-server/blob/main/src/types.ts) for details about the expected format.
-
-## External VSCode Usage
-
-We've encountered an issue with the Node version used by [Treesitter](https://github.com/tree-sitter/tree-sitter/issues/2338), a
-dependency of this language server, when working outside of VSCode. For optimal
-compatibility, please use the same Node version as version 18 of VSCode.
 
 ## Support
 

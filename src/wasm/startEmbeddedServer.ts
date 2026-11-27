@@ -1,12 +1,12 @@
-import { CucumberExpressions, ParserAdapter, Suggestion } from '@cucumber/language-service'
+import { PassThrough } from 'node:stream'
+import type { CucumberExpressions, ParserAdapter, Suggestion } from '@cucumber/language-service'
 import { WasmParserAdapter } from '@cucumber/language-service/wasm'
-import { PassThrough } from 'stream'
-import { Connection, TextDocuments } from 'vscode-languageserver'
+import { type Connection, TextDocuments } from 'vscode-languageserver'
 import { createConnection } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { CucumberLanguageServer } from '../CucumberLanguageServer.js'
-import { Files } from '../Files.js'
+import type { Files } from '../Files.js'
 
 export type ServerInfo = {
   writer: NodeJS.WritableStream

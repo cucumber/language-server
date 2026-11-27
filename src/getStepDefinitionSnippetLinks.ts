@@ -1,4 +1,4 @@
-import { LocationLink, Range } from 'vscode-languageserver-types'
+import { type LocationLink, Range } from 'vscode-languageserver-types'
 
 export function getStepDefinitionSnippetLinks(
   links: readonly LocationLink[]
