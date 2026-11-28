@@ -142,6 +142,24 @@ for (const [layout, getBinPath] of Object.entries(layouts)) {
     })
 
     context('workspace/didChangeConfiguration', () => {
+      for (const [description, settings] of Object.entries({
+        null: null,
+        'missing features and glue': {},
+      })) {
+        it(`does not fail to reindex when settings are ${description}`, async () => {
+          await clientConnection.sendNotification(DidChangeConfigurationNotification.type, {
+            settings,
+          })
+
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+
+          assert.deepStrictEqual(
+            logMessages.filter(({ message }) => message.includes('Failed to reindex')),
+            []
+          )
+        })
+      }
+
       it(`startup success`, async () => {
         // First we need to configure the server, telling it where to find Gherkin documents and Glue code.
         // Note that *pushing* settings from the client to the server is deprecated in the LSP. We're only using it

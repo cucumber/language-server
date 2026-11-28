@@ -117,6 +117,9 @@ describe('CucumberLanguageServer', () => {
       'ts',
       'cts',
       'mts',
+
+      // Kotlin
+      'kt',
     ]
 
     for (const fileExtension of fileExtensions) {
@@ -126,7 +129,7 @@ describe('CucumberLanguageServer', () => {
         // here because it's easier to implement in the test.
         const settings: Settings = {
           features: ['testdata/gherkin/*.feature'],
-          glue: [`testdata/{javascript,typescript}/*.${fileExtension}`],
+          glue: [`testdata/{javascript,typescript,kotlin}/*.${fileExtension}`],
           parameterTypes: [],
           snippetTemplates: {},
         }
@@ -202,7 +205,7 @@ describe('CucumberLanguageServer', () => {
         rootPath = process.cwd()
       })
 
-      it('finds glue in module-specific JavaScript and TypeScript files', async () => {
+      it('finds glue in module-specific JavaScript and TypeScript files, and Kotlin files', async () => {
         await clientConnection.sendNotification(InitializedNotification.type, {})
 
         // TODO: Wait for a WorkDoneProgressEnd notification instead
@@ -231,6 +234,7 @@ describe('CucumberLanguageServer', () => {
         assert.deepStrictEqual(completionItems.map((item) => item.label).sort(), [
           'I have {int} cjs cukes',
           'I have {int} cts cukes',
+          'I have {int} kt cukes',
           'I have {int} mjs cukes',
           'I have {int} mts cukes',
         ])
